@@ -1,0 +1,37 @@
+[
+{
+  "directory": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build",
+  "command": "/usr/bin/c++ -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src  -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Werror -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -x c++-header -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build/CMakeFiles/main.dir/cmake_pch.hxx -o CMakeFiles/main.dir/cmake_pch.hxx.gch -c /media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build/CMakeFiles/main.dir/cmake_pch.hxx.cxx",
+  "file": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build/CMakeFiles/main.dir/cmake_pch.hxx.cxx"
+},
+{
+  "directory": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build",
+  "command": "/usr/bin/c++ -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src  -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Werror -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build/CMakeFiles/main.dir/cmake_pch.hxx -o CMakeFiles/main.dir/src/Exp.cpp.o -c /media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src/Exp.cpp",
+  "file": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src/Exp.cpp"
+},
+{
+  "directory": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build",
+  "command": "/usr/bin/c++ -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src  -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Werror -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build/CMakeFiles/main.dir/cmake_pch.hxx -o CMakeFiles/main.dir/src/Interpreter.cpp.o -c /media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src/Interpreter.cpp",
+  "file": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src/Interpreter.cpp"
+},
+{
+  "directory": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build",
+  "command": "/usr/bin/c++ -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src  -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Werror -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build/CMakeFiles/main.dir/cmake_pch.hxx -o CMakeFiles/main.dir/src/Lexer.cpp.o -c /media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src/Lexer.cpp",
+  "file": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src/Lexer.cpp"
+},
+{
+  "directory": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build",
+  "command": "/usr/bin/c++ -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src  -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Werror -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build/CMakeFiles/main.dir/cmake_pch.hxx -o CMakeFiles/main.dir/src/Parser.cpp.o -c /media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src/Parser.cpp",
+  "file": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src/Parser.cpp"
+},
+{
+  "directory": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build",
+  "command": "/usr/bin/c++ -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src  -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Werror -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build/CMakeFiles/main.dir/cmake_pch.hxx -o CMakeFiles/main.dir/src/Stm.cpp.o -c /media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src/Stm.cpp",
+  "file": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src/Stm.cpp"
+},
+{
+  "directory": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build",
+  "command": "/usr/bin/c++ -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src  -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Werror -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/build/CMakeFiles/main.dir/cmake_pch.hxx -o CMakeFiles/main.dir/src/main.cpp.o -c /media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src/main.cpp",
+  "file": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/variables/src/main.cpp"
+}
+]
