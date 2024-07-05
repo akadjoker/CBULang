@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 cmake_policy(SET CMP0072 NEW)
 project(main)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -frtti -fno-strict-aliasing")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -12,7 +12,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_options(
     -Wextra
     -Wall
-    -Werror
     -Wno-sign-compare
     -Wno-missing-field-initializers
     -Wundef

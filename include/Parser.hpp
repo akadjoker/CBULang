@@ -7,26 +7,17 @@
 #include "Exp.hpp"
 #include "Stm.hpp"
 
-// expression     → equality ;
-// equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-// comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
-// term           → factor ( ( "-" | "+" ) factor )* ;
-// factor         → unary ( ( "/" | "*" ) unary )* ;
-// unary          → ( "!" | "-" ) unary
-//                | primary ;
-// primary        → NUMBER | STRING | "true" | "false" | "nil" ! now
-//                | "(" expression ")" ;
 
 class Parser
 {
 public:
     Parser(const std::vector<Token> &tokens);
-    ~Parser() = default;
+    ~Parser();
 
   
-    std::unique_ptr<Expr> result();
+    std::shared_ptr<Expr> result();
 
-    std::unique_ptr<Stmt> parse();
+    std::shared_ptr<Stmt> parse();
 
 
 
@@ -36,6 +27,8 @@ private:
     bool panicMode;
     int countBegins;
     int countEnds ;
+
+
 
 
     bool match(std::vector<TokenType> types);
@@ -55,47 +48,61 @@ private:
 
     // expressions
 
-     std::unique_ptr<Expr> expression();
-     std::unique_ptr<Expr> equality();
-     std::unique_ptr<Expr> comparison();
-     std::unique_ptr<Expr> assignment();
+     std::shared_ptr<Expr> expression();
+     std::shared_ptr<Expr> equality();
+     std::shared_ptr<Expr> comparison();
+     std::shared_ptr<Expr> assignment();
 
-     std::unique_ptr<Expr> logic_or();
-     std::unique_ptr<Expr> logic_and();
-     std::unique_ptr<Expr> logic_xor();
+     std::shared_ptr<Expr> logic_or();
+     std::shared_ptr<Expr> logic_and();
+     std::shared_ptr<Expr> logic_xor();
      
 
-     std::unique_ptr<Expr> term();  // + -
-     std::unique_ptr<Expr> factor(); // * / %
-     std::unique_ptr<Expr> power();  // ^ 
-     std::unique_ptr<Expr> unary();  // ! -
-     std::unique_ptr<Expr> primary(); // number string boolean null variable
+     std::shared_ptr<Expr> term();  // + -
+     std::shared_ptr<Expr> factor(); // * / %
+     std::shared_ptr<Expr> power();  // ^ 
+     std::shared_ptr<Expr> unary();  // ! -
+     std::shared_ptr<Expr> primary(); // number string boolean null variable
 
-     std::unique_ptr<Literal> number();
-     std::unique_ptr<Literal> string();
+     std::shared_ptr<Expr> call( );
 
-    std::unique_ptr<Expr> call();
-    std::unique_ptr<Stmt> call_stmt(const std::string &name);
+     std::shared_ptr<Literal> number();
+     std::shared_ptr<Literal> string();
+
+
 
     // Statements
-    std::unique_ptr<ExpressionStmt> expressionStatement();
+    std::shared_ptr<ExpressionStmt> expressionStatement();
 
-    std::unique_ptr<EmptyStmt> emptyDeclaration();
+    std::shared_ptr<EmptyStmt> emptyDeclaration();
 
-    std::unique_ptr<Stmt> declaration();    // declaration of variable in block
-    std::unique_ptr<Stmt> defDeclaration(); // declaration of functions/process in program
-    std::unique_ptr<Stmt> statement();
-
-    std::unique_ptr<PrintStmt> printStmt();
-    std::unique_ptr<BlockStmt> blockStmt();
-    std::unique_ptr<Program> programStmt();
-
-
-    std::unique_ptr<ProcedureStmt> procedureStmt();// declaration of procedure
-    std::unique_ptr<ProcedureCallStmt> procedureCall(); // call of procedure
-
-    std::unique_ptr<VarStmt> varDeclaration(LiteralType type);
-
-
+    std::shared_ptr<Stmt> declaration();    // declaration of variable in block
+    std::shared_ptr<Stmt> defDeclaration(); // declaration of functions/process in program
+    std::shared_ptr<Stmt> statement();
+    std::shared_ptr<ReturnStmt> returnStmt();
+   
+    std::shared_ptr<IfStmt> ifStmt();
+    std::shared_ptr<ForStmt> forStmt();
+    std::shared_ptr<WhileStmt> whileStmt();
+    std::shared_ptr<PrintStmt> printStmt();
+    std::shared_ptr<BlockStmt> blockStmt();
+    std::shared_ptr<Program> programStmt();
+    std::shared_ptr<SwitchStmt> switchStmt();
+    std::shared_ptr<RepeatStmt> repeatStmt();
+    std::shared_ptr<LoopStmt>   loopStmt();
+    std::shared_ptr<BreakStmt>    breakStmt();
+    std::shared_ptr<ContinueStmt> continueStmt();
     
+
+    std::shared_ptr<ProcedureStmt> procedureStmt();// declaration of procedure
+    std::shared_ptr<ProcedureCallStmt> procedureCall(); // call of procedure
+
+    std::shared_ptr<FunctionStmt> functionStmt();
+    std::shared_ptr<FunctionCallExpr> functionCall(const std::shared_ptr<Expr> &expr);
+    
+
+    std::shared_ptr<VarStmt> varDeclaration(LiteralType type);
+   
+
+
 };

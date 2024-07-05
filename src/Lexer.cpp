@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Lexer.hpp"
-
+#include "Utils.hpp"
 
 
 Lexer::Lexer(const std::string &input)
@@ -28,6 +28,11 @@ Lexer::Lexer(const std::string &input)
     keywords["while"] = TokenType::WHILE;
     keywords["until"] = TokenType::UNTIL;
 
+    keywords["loop"] = TokenType::LOOP;
+    keywords["switch"] = TokenType::SWITCH;
+    keywords["case"] = TokenType::CASE;
+    keywords["default"] = TokenType::DEFAULT;
+
     keywords["begin"] = TokenType::BEGIN;
     keywords["end"] = TokenType::END;
     keywords["program"] = TokenType::PROGRAM;
@@ -39,8 +44,9 @@ Lexer::Lexer(const std::string &input)
     keywords["function"] = TokenType::FUNCTION;
     keywords["procedure"] = TokenType::PROCEDURE;
     keywords["process"] = TokenType::PROCESS;
+    
 
-    keywords["print"] = TokenType::PRINT;
+    
     keywords["nil"] = TokenType::NIL;
     keywords["int"] = TokenType::IDINT;
     keywords["float"] = TokenType::IDFLOAT;
@@ -63,17 +69,55 @@ void Lexer::scanToken()
     char c = advance();
     switch (c)
     {
-      case '(': addToken(TokenType::LEFT_PAREN); break;
-      case ')': addToken(TokenType::RIGHT_PAREN); break;
-      case '{': addToken(TokenType::LEFT_BRACE); break;
-      case '}': addToken(TokenType::RIGHT_BRACE); break;
-      case '[': addToken(TokenType::LEFT_BRACKET); break;
-      case ']': addToken(TokenType::RIGHT_BRACKET); break;
+      case '(': 
+      {
+        parens.push(parens.size());
+        addToken(TokenType::LEFT_PAREN); 
+        break;
+      }
+      case ')': 
+      {
+        if (parens.size() > 0) parens.pop();
+        addToken(TokenType::RIGHT_PAREN); 
+        break;
+      }
+      case '{': 
+      {
+        braces.push(braces.size());
+        addToken(TokenType::LEFT_BRACE); 
+        break;
+      }
+      case '}': 
+      {
+        if (braces.size() > 0) braces.pop();
+        addToken(TokenType::RIGHT_BRACE); 
+        break;
+      }
+      case '[': 
+      {
+        brackets.push(brackets.size());
+        addToken(TokenType::LEFT_BRACKET); 
+        break;
+      }
+      case ']': 
+      {
+        if (brackets.size() > 0) brackets.pop();
+        addToken(TokenType::RIGHT_BRACKET); 
+        break;
+      }
 
       case ',': addToken(TokenType::COMMA); break;
       case '.': addToken(TokenType::DOT); break;
-      case '-': addToken(TokenType::MINUS); break;
-      case '+': addToken(TokenType::PLUS); break;
+      case '-': 
+      {
+        addToken(match('-') ? TokenType::DEC : TokenType::MINUS);
+        break;
+      }
+      case '+': 
+      {
+        addToken(match('+') ? TokenType::INC : TokenType::PLUS);
+        break;
+      }
       case ';': addToken(TokenType::SEMICOLON); break;
       case ':': addToken(TokenType::COLON); break;
 
@@ -159,6 +203,36 @@ void Lexer::scanToken()
 
 }
 
+bool Lexer::ready()
+{
+    if (input.size() == 0) 
+    {
+        Log(2, "Input is empty");
+        return false;
+    }
+    if (blocks.size() > 0) 
+    {
+        Log(2, "Blocks 'begin' 'end' not closed");
+        return false;
+    }
+    if (brackets.size() > 0) 
+    {
+        Log(2, "Brackets not closed");
+        return false;
+    }
+    if (braces.size() > 0) 
+    {
+        Log(2, "Braces not closed");
+        return false;
+    }
+    if (parens.size() > 0) 
+    {
+        Log(2, "Parens not closed");
+        return false;
+    }
+    return true;
+}
+
 std::vector<Token> Lexer::scanTokens()
 {
     if (panicMode)
@@ -206,13 +280,13 @@ bool Lexer::match(char expected)
 
 char Lexer::peekNext()
 {
-    if (current + 1 >= input.size()) return '\0';
+    if (current + 1 >= (int)input.size()) return '\0';
     return input[current + 1];
 }
 
 char Lexer::peekAhead(int n)
 {
-    if (current + n >= input.size()) return '\0';
+    if (current + n >= (int)input.size()) return '\0';
     return input[current + n];
 }
 
@@ -224,13 +298,13 @@ char Lexer::previous()
 
 bool Lexer::isAtEnd()
 {
-    return current >= input.size();
+    return current >= (int)input.size();
 }
 
 bool Lexer::isDigit(char c)
 {
     return (c >= '0' && c <= '9');
-   // || c == '.';
+   
 }
 
 bool Lexer::isAlpha(char c)
@@ -269,20 +343,25 @@ bool Lexer::hasProcedure(const std::string &str)
 {
     
     std::string lowerStr = toLower(str);
-    for (auto it = procedures.begin(); it != procedures.end(); it++)
-    {
-        std::cout<<it->first<<std::endl;
-        if (it->first == lowerStr)
-        {
-            return true;
-        }
-    }
-    // if (keywords.find(lowerStr) != keywords.end())
-    // {
-    //      return true;
-    // }
-    return false;
+    
+    return procedures.find(lowerStr) != procedures.end();
 
+}
+
+bool Lexer::hasFunction(const std::string &str)
+{
+
+    std::string lowerStr = toLower(str);
+    return functions.find(lowerStr) != functions.end();
+    
+}
+
+bool Lexer::hasProcess(const std::string &str)
+{
+
+    std::string lowerStr = toLower(str);
+    return processes.find(lowerStr) != processes.end();
+    
 }
 
 void Lexer::identifier()
@@ -296,6 +375,7 @@ void Lexer::identifier()
 
     std::string text = input.substr(start, current - start);
     text = toLower(text);
+ 
     
   
     if (keywords.find(text) != keywords.end())
@@ -325,17 +405,32 @@ void Lexer::identifier()
         } else if (isFunction)
         {
             addToken(TokenType::IDFUNCTION, text);
+            if (!hasFunction(text))
+            {
+               functions[text] = (int)tokens.size()-1;
+            }
             isFunction = false;
         } else if (isProcess)
         {
             addToken(TokenType::IDPROCESS, text);
+            if (!hasProcess(text))
+            {
+               processes[text] = (int)tokens.size()-1;
+            }
             isProcess = false;
         } else 
         {
              if (hasProcedure(text))
              {
                addToken(TokenType::IDPROCEDURE, text);
-             } else 
+             }  else if (hasFunction(text))
+             {
+                addToken(TokenType::IDFUNCTION, text);
+             } else if (hasProcess(text))
+             {
+                addToken(TokenType::IDPROCESS, text);
+             }
+             else 
              {
                 addToken(TokenType::IDENTIFIER, text);
              }
@@ -397,6 +492,14 @@ void Lexer::number()
 
 void Lexer::addToken(TokenType type, const std::string &literal)
 {
+    if (type == TokenType::BEGIN)
+    {
+        blocks.push((int)tokens.size()-1);
+    }
+    if (type == TokenType::END)
+    {
+        blocks.pop();
+    }
     std::string text = input.substr(start, current - start);
     //text = toLower(text);
     Token token = Token(type, text, literal, line);

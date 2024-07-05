@@ -33,6 +33,8 @@ enum class TokenType
     GREATER_EQUAL, // >=
     LESS,          // <
     LESS_EQUAL,    // <
+    INC,             // ++
+    DEC,             // --
 
     // Literals.
     IDENTIFIER,
@@ -83,6 +85,13 @@ enum class TokenType
     BREAK,
     CONTINUE,
     RETURN,
+    SWITCH,
+    CASE,
+    DEFAULT,
+    LOOP,
+    FRAME,
+    CLASS,
+    THIS,
 
     // internals
     PRINT,
@@ -120,6 +129,8 @@ inline std::string tknString(TokenType type)
         case TokenType::GREATER_EQUAL: return "GREATER_EQUAL";
         case TokenType::LESS:          return "LESS";
         case TokenType::LESS_EQUAL:    return "LESS_EQUAL";
+        case TokenType::INC:           return "INC";
+        case TokenType::DEC:           return "DEC";
         case TokenType::IDENTIFIER:    return "IDENTIFIER";
         case TokenType::STRING:        return "STRING";
         case TokenType::INT:           return "INT";
@@ -156,6 +167,13 @@ inline std::string tknString(TokenType type)
         case TokenType::BREAK:         return "BREAK";
         case TokenType::CONTINUE:      return "CONTINUE";
         case TokenType::RETURN:        return "RETURN";
+        case TokenType::SWITCH:        return "SWITCH";
+        case TokenType::CASE:          return "CASE";
+        case TokenType::DEFAULT:       return "DEFAULT";
+        case TokenType::LOOP:          return "LOOP";
+        case TokenType::FRAME:         return "FRAME";
+        case TokenType::CLASS:         return "CLASS";
+        case TokenType::THIS:          return "THIS";
         case TokenType::PRINT:         return "PRINT";
         case TokenType::NOW:           return "NOW";
         case TokenType::ERROR:         return "ERROR";

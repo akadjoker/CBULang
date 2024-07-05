@@ -6,6 +6,7 @@ class Visitor;
 
 enum ExprType 
 {
+    NONE,
     EMPTY_EXPR,
     BINARY,
     UNARY,
@@ -14,9 +15,11 @@ enum ExprType
     VARIABLE,
     ASSIGN,
     LOGICAL,
-    NOW
+    NOW,
+    CALL
 };
 
+struct FunctionStmt;
 
 struct Expr 
 {
@@ -25,14 +28,16 @@ struct Expr
        // std::cout<<"Delete Expr"<<std::endl;
     }
 
-    virtual ExprType getType() const = 0;
+    virtual ExprType getType()    const { return ExprType::NONE; }
 
-    virtual std::unique_ptr<Expr> accept(Visitor *visitor) = 0;
+    virtual std::shared_ptr<Expr> accept(Visitor *visitor) = 0;
 
     std::string toString() const
     {
         switch (getType())
         {
+            case NONE:
+                return "None";
             case EMPTY_EXPR:
                 return "Empty";
             case BINARY:
@@ -50,9 +55,11 @@ struct Expr
             case LOGICAL:
                 return "Logical";
             case NOW:
-                return "Now";   
+                return "Now";
+            case CALL:
+                return "Call";   
             default:
-                return "Unknown";
+                return "Unknow: "+std::to_string((int)getType());
         }
         
     }
@@ -64,63 +71,71 @@ struct EmptyExpr : public Expr
 {
     ExprType getType() const override    {        return ExprType::EMPTY_EXPR;    }
 
-    std::unique_ptr<Expr> accept(Visitor *visitor) override;
+    std::shared_ptr<Expr> accept(Visitor *visitor) override;
 };
 
 struct LiteralExpr : public Expr 
 {
-    std::unique_ptr<Literal> value;
+    std::shared_ptr<Literal> value;
 
-    LiteralExpr(std::unique_ptr<Literal> value) : value(std::move(value)) {}
+    LiteralExpr(std::shared_ptr<Literal> value) : value(std::move(value)) {}
 
     ExprType getType() const override     {        return ExprType::LITERAL;    }
 
-    std::unique_ptr<Expr> accept(Visitor *visitor) override;
+    virtual ~LiteralExpr();
+
+    std::shared_ptr<Expr> accept(Visitor *visitor) override;
+
+
 };
 
 struct BinaryExpr : public Expr
 {
-    std::unique_ptr<Expr> left;
-    std::unique_ptr<Expr> right;
+    std::shared_ptr<Expr> left;
+    std::shared_ptr<Expr> right;
     Token op;
 
-    BinaryExpr(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, Token op) : left(std::move(left)), right(std::move(right)), op(op) {}
+    BinaryExpr(std::shared_ptr<Expr> left, std::shared_ptr<Expr> right, Token op) : left(std::move(left)), right(std::move(right)), op(op) {}
 
     ExprType getType() const override    {        return ExprType::BINARY;    }
-    std::unique_ptr<Expr> accept(Visitor *visitor) override;
+    std::shared_ptr<Expr> accept(Visitor *visitor) override;
 };
 
 struct LogicalExpr : public Expr
 {
-    std::unique_ptr<Expr> left;
-    std::unique_ptr<Expr> right;
+    std::shared_ptr<Expr> left;
+    std::shared_ptr<Expr> right;
     Token op;
 
-    LogicalExpr(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, Token op) : left(std::move(left)), right(std::move(right)), op(op) {}
+    LogicalExpr(std::shared_ptr<Expr> left, std::shared_ptr<Expr> right, Token op) : left(std::move(left)), right(std::move(right)), op(op) {}
 
     ExprType getType() const override    {        return ExprType::LOGICAL;    }
-    std::unique_ptr<Expr> accept(Visitor *visitor) override;
+    std::shared_ptr<Expr> accept(Visitor *visitor) override;
 };
 
 struct UnaryExpr : public Expr
 {
-    std::unique_ptr<Expr> right;
+    std::shared_ptr<Expr> right;
     Token op;
+    bool isPrefix;
 
-    UnaryExpr(std::unique_ptr<Expr> right, Token op) : right(std::move(right)), op(op) {}
+    UnaryExpr(std::shared_ptr<Expr> right, Token op, bool isPrefix=false) : right(std::move(right)), op(op), isPrefix(isPrefix) {}
 
     ExprType getType() const override    {        return ExprType::UNARY;    }
-    std::unique_ptr<Expr> accept(Visitor *visitor) override;
+    std::shared_ptr<Expr> accept(Visitor *visitor) override;
 };
+
+
+
 
 struct GroupingExpr : public Expr
 {
-    std::unique_ptr<Expr> expression;
+    std::shared_ptr<Expr> expression;
 
-    GroupingExpr(std::unique_ptr<Expr> expression) : expression(std::move(expression)) {}
+    GroupingExpr(std::shared_ptr<Expr> expression) : expression(std::move(expression)) {}
 
     ExprType getType() const override    {        return ExprType::GROUPING;    }
-    std::unique_ptr<Expr> accept(Visitor *visitor) override;
+    std::shared_ptr<Expr> accept(Visitor *visitor) override;
 
 };
 
@@ -132,7 +147,7 @@ struct TypeExpr : public Expr
     TypeExpr(const Token &name) : name(name) {}
 
     ExprType getType() const override    {        return ExprType::VARIABLE;    }
-    std::unique_ptr<Expr> accept(Visitor *visitor) override;
+    std::shared_ptr<Expr> accept(Visitor *visitor) override;
 
 };
 
@@ -145,18 +160,18 @@ struct VariableExpr : public Expr
     VariableExpr(const Token &name) : name(name) {}
 
     ExprType getType() const override    {        return ExprType::VARIABLE;    }
-    std::unique_ptr<Expr> accept(Visitor *visitor) override;
+    std::shared_ptr<Expr> accept(Visitor *visitor) override;
 
 };
 
 struct AssignExpr : public Expr
 {
     Token name;
-    std::unique_ptr<Expr> value;
-    AssignExpr(const Token &name, std::unique_ptr<Expr> value) : name(name), value(std::move(value)) {}
+    std::shared_ptr<Expr> value;
+    AssignExpr(const Token &name, std::shared_ptr<Expr> value) : name(name), value(std::move(value)) {}
 
     ExprType getType() const override    {        return ExprType::ASSIGN;    }
-    std::unique_ptr<Expr> accept(Visitor *visitor) override;
+    std::shared_ptr<Expr> accept(Visitor *visitor) override;
 
 };
 
@@ -165,7 +180,20 @@ struct AssignExpr : public Expr
 struct NowExpr : public Expr
 {
     ExprType getType() const override    {        return ExprType::NOW;    }
-    std::unique_ptr<Expr> accept(Visitor *visitor) override;
+    std::shared_ptr<Expr> accept(Visitor *visitor) override;
 };
 
 
+struct FunctionCallExpr : public Expr
+{
+    Token name;
+    std::vector<std::shared_ptr<Expr>> arguments;
+    std::shared_ptr<Expr> expression;
+
+   FunctionCallExpr(const Token &name, std::vector<std::shared_ptr<Expr>> arguments, std::shared_ptr<Expr> expr) 
+    : name(name), arguments(std::move(arguments)), expression(std::move(expr)) {}
+
+
+    ExprType getType() const override { return ExprType::CALL; }
+    std::shared_ptr<Expr> accept(Visitor *visitor) override;
+};

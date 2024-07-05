@@ -51,49 +51,63 @@ build cmake_object_order_depends_target_main: phony || CMakeFiles/main.dir
 
 build CMakeFiles/main.dir/cmake_pch.hxx.gch: CXX_COMPILER__main_Debug /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx.cxx | CMakeFiles/main.dir/cmake_pch.hxx || cmake_object_order_depends_target_main
   DEP_FILE = CMakeFiles/main.dir/cmake_pch.hxx.gch.d
-  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Werror -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -x c++-header -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
+  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++11 -Winvalid-pch -x c++-header -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
   INCLUDES = -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/src
   OBJECT_DIR = CMakeFiles/main.dir
   OBJECT_FILE_DIR = CMakeFiles/main.dir
 
 build CMakeFiles/main.dir/src/Exp.cpp.o: CXX_COMPILER__main_Debug /media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Exp.cpp | CMakeFiles/main.dir/cmake_pch.hxx CMakeFiles/main.dir/cmake_pch.hxx.gch || cmake_object_order_depends_target_main
   DEP_FILE = CMakeFiles/main.dir/src/Exp.cpp.o.d
-  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Werror -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
+  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++11 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
   INCLUDES = -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/src
   OBJECT_DIR = CMakeFiles/main.dir
   OBJECT_FILE_DIR = CMakeFiles/main.dir/src
 
 build CMakeFiles/main.dir/src/Interpreter.cpp.o: CXX_COMPILER__main_Debug /media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Interpreter.cpp | CMakeFiles/main.dir/cmake_pch.hxx CMakeFiles/main.dir/cmake_pch.hxx.gch || cmake_object_order_depends_target_main
   DEP_FILE = CMakeFiles/main.dir/src/Interpreter.cpp.o.d
-  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Werror -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
+  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++11 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
   INCLUDES = -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/src
   OBJECT_DIR = CMakeFiles/main.dir
   OBJECT_FILE_DIR = CMakeFiles/main.dir/src
 
 build CMakeFiles/main.dir/src/Lexer.cpp.o: CXX_COMPILER__main_Debug /media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Lexer.cpp | CMakeFiles/main.dir/cmake_pch.hxx CMakeFiles/main.dir/cmake_pch.hxx.gch || cmake_object_order_depends_target_main
   DEP_FILE = CMakeFiles/main.dir/src/Lexer.cpp.o.d
-  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Werror -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
+  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++11 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
+  INCLUDES = -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/src
+  OBJECT_DIR = CMakeFiles/main.dir
+  OBJECT_FILE_DIR = CMakeFiles/main.dir/src
+
+build CMakeFiles/main.dir/src/Literal.cpp.o: CXX_COMPILER__main_Debug /media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Literal.cpp | CMakeFiles/main.dir/cmake_pch.hxx CMakeFiles/main.dir/cmake_pch.hxx.gch || cmake_object_order_depends_target_main
+  DEP_FILE = CMakeFiles/main.dir/src/Literal.cpp.o.d
+  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++11 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
   INCLUDES = -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/src
   OBJECT_DIR = CMakeFiles/main.dir
   OBJECT_FILE_DIR = CMakeFiles/main.dir/src
 
 build CMakeFiles/main.dir/src/Parser.cpp.o: CXX_COMPILER__main_Debug /media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Parser.cpp | CMakeFiles/main.dir/cmake_pch.hxx CMakeFiles/main.dir/cmake_pch.hxx.gch || cmake_object_order_depends_target_main
   DEP_FILE = CMakeFiles/main.dir/src/Parser.cpp.o.d
-  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Werror -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
+  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++11 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
   INCLUDES = -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/src
   OBJECT_DIR = CMakeFiles/main.dir
   OBJECT_FILE_DIR = CMakeFiles/main.dir/src
 
 build CMakeFiles/main.dir/src/Stm.cpp.o: CXX_COMPILER__main_Debug /media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Stm.cpp | CMakeFiles/main.dir/cmake_pch.hxx CMakeFiles/main.dir/cmake_pch.hxx.gch || cmake_object_order_depends_target_main
   DEP_FILE = CMakeFiles/main.dir/src/Stm.cpp.o.d
-  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Werror -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
+  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++11 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
+  INCLUDES = -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/src
+  OBJECT_DIR = CMakeFiles/main.dir
+  OBJECT_FILE_DIR = CMakeFiles/main.dir/src
+
+build CMakeFiles/main.dir/src/Utils.cpp.o: CXX_COMPILER__main_Debug /media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Utils.cpp | CMakeFiles/main.dir/cmake_pch.hxx CMakeFiles/main.dir/cmake_pch.hxx.gch || cmake_object_order_depends_target_main
+  DEP_FILE = CMakeFiles/main.dir/src/Utils.cpp.o.d
+  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++11 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
   INCLUDES = -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/src
   OBJECT_DIR = CMakeFiles/main.dir
   OBJECT_FILE_DIR = CMakeFiles/main.dir/src
 
 build CMakeFiles/main.dir/src/main.cpp.o: CXX_COMPILER__main_Debug /media/djoker/code/code2/cpp/scripting/VM/CBULang/src/main.cpp | CMakeFiles/main.dir/cmake_pch.hxx CMakeFiles/main.dir/cmake_pch.hxx.gch || cmake_object_order_depends_target_main
   DEP_FILE = CMakeFiles/main.dir/src/main.cpp.o.d
-  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Werror -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
+  FLAGS = -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Wno-sign-compare -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++11 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx
   INCLUDES = -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/src
   OBJECT_DIR = CMakeFiles/main.dir
   OBJECT_FILE_DIR = CMakeFiles/main.dir/src
@@ -106,7 +120,7 @@ build CMakeFiles/main.dir/src/main.cpp.o: CXX_COMPILER__main_Debug /media/djoker
 #############################################
 # Link the executable ../bin/main
 
-build ../bin/main: CXX_EXECUTABLE_LINKER__main_Debug CMakeFiles/main.dir/src/Exp.cpp.o CMakeFiles/main.dir/src/Interpreter.cpp.o CMakeFiles/main.dir/src/Lexer.cpp.o CMakeFiles/main.dir/src/Parser.cpp.o CMakeFiles/main.dir/src/Stm.cpp.o CMakeFiles/main.dir/src/main.cpp.o
+build ../bin/main: CXX_EXECUTABLE_LINKER__main_Debug CMakeFiles/main.dir/src/Exp.cpp.o CMakeFiles/main.dir/src/Interpreter.cpp.o CMakeFiles/main.dir/src/Lexer.cpp.o CMakeFiles/main.dir/src/Literal.cpp.o CMakeFiles/main.dir/src/Parser.cpp.o CMakeFiles/main.dir/src/Stm.cpp.o CMakeFiles/main.dir/src/Utils.cpp.o CMakeFiles/main.dir/src/main.cpp.o
   FLAGS = -fexceptions -frtti -fno-strict-aliasing -g
   LINK_FLAGS = -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch
   OBJECT_DIR = CMakeFiles/main.dir

@@ -1,812 +1,351 @@
 #include "pch.h"
 #include "Interpreter.hpp"
 #include "Literal.hpp"
+#include "Utils.hpp"
+
+
+
+
+
 
 Interpreter::Interpreter()
 {
     currentDepth = 0;
-    environment = new Environment(currentDepth);
+    environment = std::make_shared<Environment>(0, nullptr);
     panicMode = false;
+    start_time = std::chrono::high_resolution_clock::now();
+    time_elapsed();
 }
 
 Interpreter::~Interpreter()
 {
-    if (environment != nullptr)
-    {
-      delete environment;
-     environment = nullptr;
-    }
-    
+    Log(0, "Delete Interpreter");
+  
     procedureList.clear();
+    functionList.clear();
 }
 
 
-std::unique_ptr<Expr> Interpreter::visit(std::unique_ptr<Expr> expr)
+ float Interpreter::time_elapsed() 
+ {
+        auto now = std::chrono::high_resolution_clock::now();
+        auto duration = now - start_time;
+        auto milliseconds = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(duration).count();
+        return milliseconds;
+
+        // auto now = std::chrono::system_clock::now();
+        // auto duration = now - start_time;//now.time_since_epoch();
+        // auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+        // return seconds;
+    
+}
+
+std::shared_ptr<Expr> Interpreter::visit(const std::shared_ptr<Expr> &expr)
 {
     return expr->accept(this);
 }
 
-std::unique_ptr<Expr> Interpreter::visitBinaryExpr(BinaryExpr *expr)
-{
-
-    auto leftVal = evaluate(std::move(expr->left));
-    if (!leftVal) return std::unique_ptr<EmptyExpr>();
-    auto rightVal = evaluate(std::move(expr->right));
-    if (!rightVal) return std::unique_ptr<EmptyExpr>();
-
-    if (leftVal->getType() == ExprType::LITERAL && rightVal->getType() == ExprType::LITERAL)
-    {
-        LiteralExpr *leftLiteral = dynamic_cast<LiteralExpr*>(leftVal.get());
-        LiteralExpr *rightLiteral = dynamic_cast<LiteralExpr*>(rightVal.get());
-
-        if (expr->op.type == TokenType::PLUS) // + addition
-        {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createIntLiteral(leftLiteral->value->getInt() + rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(leftLiteral->value->getFloat() + rightLiteral->value->getFloat());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createFloatLiteral(leftLiteral->value->getFloat() + rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(leftLiteral->value->getInt() + rightLiteral->value->getFloat());
-            } else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::STRING)
-            {
-                std::string value = std::string(leftLiteral->value->getString());
-                value += std::string(rightLiteral->value->getString());
-                return createStringLiteral(value);
-            } else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                std::string value = leftLiteral->value->getString() + std::to_string(rightLiteral->value->getInt());
-                return createStringLiteral(value);
-            } else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                std::string value = leftLiteral->value->getString() + std::to_string(rightLiteral->value->getFloat());
-                return createStringLiteral(value);
-            } else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::BOOLEAN)
-            {
-                std::string value = leftLiteral->value->getString() + std::to_string(rightLiteral->value->getBool());
-                return createStringLiteral(value);
-            } else 
-            {
-                                
-                 Error(expr->op, "Unsupported operation (" + leftVal->toString() + " + " + rightVal->toString() + ")");
-                  return createBoolLiteral(false);
-                
-            }
-        }
-        else if (expr->op.type == TokenType::MINUS) // - subtraction
-        {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createIntLiteral(leftLiteral->value->getInt() - rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(leftLiteral->value->getFloat() - rightLiteral->value->getFloat());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createFloatLiteral(leftLiteral->value->getFloat() - rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(leftLiteral->value->getInt() - rightLiteral->value->getFloat());
-            } else 
-            {
-                                
-                  Error(expr->op, "Unsupported operation (" + leftVal->toString() + " - " + rightVal->toString() + ")");
-                  return createBoolLiteral(false);
-                
-            }
-        }
-        else if (expr->op.type == TokenType::STAR)// * multiplication
-        {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createIntLiteral(leftLiteral->value->getInt() * rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(leftLiteral->value->getFloat() * rightLiteral->value->getFloat());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createFloatLiteral(leftLiteral->value->getFloat() * rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(leftLiteral->value->getInt() * rightLiteral->value->getFloat());
-            } else 
-            {
-                                
-                  Error(expr->op, "Unsupported operation (" + leftVal->toString() + " * " + rightVal->toString() + ")");
-                  return createBoolLiteral(false);
-                
-            }
-        }
-        else if (expr->op.type == TokenType::SLASH)// / division
-        {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                if (rightLiteral->value->getInt() == 0)
-                {
-                    Error(expr->op, "Division by zero");
-                    return createIntLiteral(0);
-                }
-                return createIntLiteral(leftLiteral->value->getInt() / rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                if (rightLiteral->value->getFloat() == 0)
-                {
-                    Error(expr->op, "Division by zero");
-                    return createFloatLiteral(0);
-                }
-                return createFloatLiteral(leftLiteral->value->getFloat() / rightLiteral->value->getFloat());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                if (rightLiteral->value->getInt() == 0)
-                {
-                    Error(expr->op, "Division by zero");
-                    return createFloatLiteral(0);
-                }
-                return createFloatLiteral(leftLiteral->value->getFloat() / rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                if (rightLiteral->value->getFloat() == 0)
-                {
-                    Error(expr->op, "Division by zero");
-                    return createFloatLiteral(0);
-                }
-                return createFloatLiteral(leftLiteral->value->getInt() / rightLiteral->value->getFloat());
-            }
-        }else if (expr->op.type == TokenType::MOD)
-        {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createIntLiteral(leftLiteral->value->getInt() % rightLiteral->value->getInt());
-            } else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(fmod(leftLiteral->value->getFloat(), rightLiteral->value->getFloat()));
-            }else 
-            {
-                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " % " + rightVal->toString() + ")");
-                return createBoolLiteral(false);
-            }
-        }else if (expr->op.type == TokenType::POWER)
-        {
-          if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createIntLiteral(static_cast<int>(std::pow(leftLiteral->value->getInt(), rightLiteral->value->getInt())));
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(std::pow(leftLiteral->value->getFloat(), rightLiteral->value->getFloat()));
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createFloatLiteral(std::pow(leftLiteral->value->getFloat(), rightLiteral->value->getInt()));
-            }
-            else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(std::pow(leftLiteral->value->getInt(), rightLiteral->value->getFloat()));
-            }else
-            {
-                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " ^ " + rightVal->toString() + ")");
-                return createBoolLiteral(false);
-            }
-        }else if (expr->op.type == TokenType::EQUAL_EQUAL)
-        {
-            if (leftLiteral->value->getType() != rightLiteral->value->getType() )
-            {
-                return createBoolLiteral(false);
-            }else if (leftLiteral->value->getType() == LiteralType::BOOLEAN && rightLiteral->value->getType() == LiteralType::BOOLEAN)
-            {
-                return createBoolLiteral(leftLiteral->value->getBool() == rightLiteral->value->getBool());
-            } else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::STRING)
-            {
-                return createBoolLiteral(leftLiteral->value->getString() == rightLiteral->value->getString());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createBoolLiteral(leftLiteral->value->getInt() == rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createBoolLiteral(leftLiteral->value->getFloat() == rightLiteral->value->getFloat());
-            }
-            else
-            {
-                                
-                 Error(expr->op, "Unsupported operation (" + leftVal->toString() + " == " + rightVal->toString() + ")");
-                  return createBoolLiteral(false);
-                
-            }
-             
-        }else if (expr->op.type == TokenType::BANG_EQUAL)
-        {
-            if (leftLiteral->value->getType() != rightLiteral->value->getType() )
-            {
-                return createBoolLiteral(false);
-            }else if (leftLiteral->value->getType() == LiteralType::BOOLEAN && rightLiteral->value->getType() == LiteralType::BOOLEAN)
-            {
-                return createBoolLiteral(leftLiteral->value->getBool() != rightLiteral->value->getBool());
-            } else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::STRING)
-            {
-                return createBoolLiteral(leftLiteral->value->getString() != rightLiteral->value->getString());
-            } else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createBoolLiteral(leftLiteral->value->getInt() != rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createBoolLiteral(leftLiteral->value->getFloat() != rightLiteral->value->getFloat());
-            }
-            else
-            {
-                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " != " + rightVal->toString() + ")");
-                return createBoolLiteral(false);
-            }
-        }else if (expr->op.type == TokenType::LESS)// <
-        {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createBoolLiteral(leftLiteral->value->getInt() < rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createBoolLiteral(leftLiteral->value->getFloat() < rightLiteral->value->getFloat());
-            }
-            else
-            {
-               Error(expr->op, "Unsupported operation (" + leftVal->toString() + " < " + rightVal->toString() + ")");
-               return createBoolLiteral(false);
-            }
-         }else if (expr->op.type == TokenType::LESS_EQUAL)// <=
-        {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createBoolLiteral(leftLiteral->value->getInt() <= rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createBoolLiteral(leftLiteral->value->getFloat() <= rightLiteral->value->getFloat());
-            }
-            else
-            {
-               Error(expr->op, "Unsupported operation (" + leftVal->toString() + " <= " + rightVal->toString() + ")");
-                return createBoolLiteral(false);
-            }
-         }else if (expr->op.type == TokenType::GREATER)// >
-        {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createBoolLiteral(leftLiteral->value->getInt() > rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createBoolLiteral(leftLiteral->value->getFloat() > rightLiteral->value->getFloat());
-            }
-            else
-            {
-                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " > " + rightVal->toString() + ")");
-                return createBoolLiteral(false);
-            }
-         }else if (expr->op.type == TokenType::GREATER_EQUAL)// >=
-        {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createBoolLiteral(leftLiteral->value->getInt() >= rightLiteral->value->getInt());
-            }else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createBoolLiteral(leftLiteral->value->getFloat() >= rightLiteral->value->getFloat());
-            }
-            else
-            {
-               Error(expr->op, "Unsupported operation (" + leftVal->toString() + " >= " + rightVal->toString() + ")");
-                return createBoolLiteral(false);
-            }
-        }
-
-    }
-    else
-    {
-        Error(expr->op, "Unknown binary type (" + leftVal->toString() + " - " + rightVal->toString() + ")");
-        return createBoolLiteral(false);
-    }
-
-    
-    Error(expr->op, "Unknown binary type (" + leftVal->toString() + " - " + rightVal->toString() + ")");
-    return createBoolLiteral(false);
-}
-
-
-
-std::unique_ptr<Expr> Interpreter::visitUnaryExpr(UnaryExpr *expr)
-{
-    auto rightVal = evaluate(std::move(expr->right));
-
-    if (rightVal->getType() == ExprType::LITERAL)
-    {
-        LiteralExpr *literal = dynamic_cast<LiteralExpr*>(rightVal.get());
-
-        if  (expr->op.type==TokenType::MINUS)
-        {
-            
-                if (literal->value->getType() == LiteralType::INT)
-                {
-                    return createIntLiteral(-literal->value->getInt());
-                }
-                else if (literal->value->getType() == LiteralType::FLOAT)
-                {
-                    return createFloatLiteral(-literal->value->getFloat());
-                }
-          
-            
-        } else if (expr->op.type==TokenType::BANG)
-        {
-            if (literal->value->getType() == LiteralType::BOOLEAN)
-            {
-                return createBoolLiteral(!literal->value->getBool());
-            }
-        } else if (expr->op.type==TokenType::NOT)
-        {
-            if (literal->value->getType() == LiteralType::BOOLEAN)
-            {
-                return createBoolLiteral(!literal->value->getBool());
-            }
-        }
-        else 
-        {
-                Error(expr->op, "Unknown unary operator");
-                return createBoolLiteral(false);
-        }
-    }
-    else
-    {
-        Error(expr->op, "Unary operation on non-literal");
-      return createBoolLiteral(false);;
-    }
-
-    Warning( "Failed to evaluate unary expression");
-    return createBoolLiteral(false);
-}
-
-
-static float native_now()
-{
-    auto now = std::chrono::system_clock::now();
-    auto duration = now.time_since_epoch();
-    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    return static_cast<float>(milliseconds);
-}
-
-std::unique_ptr<Expr> Interpreter::visitNowExpr(NowExpr *expr)
-{
-    return createFloatLiteral(native_now());
-}
-
-std::unique_ptr<Expr> Interpreter::visitEmptyExpr(EmptyExpr *expr)
-{
-    
-    return std::unique_ptr<Expr>();
-}
-
-
-static bool literalToBool(const Literal& literal)
+static bool literalToBool(const Literal &literal)
 {
     switch (literal.getType())
     {
-        case LiteralType::BOOLEAN:
-            return literal.getBool();
-        case LiteralType::INT:
-            return literal.getInt() != 0;
-        case LiteralType::FLOAT:
-            return literal.getFloat() != 0.0;
-        default:
-            return false;
+    case LiteralType::BOOLEAN:
+        return literal.getBool();
+    case LiteralType::INT:
+        return literal.getInt() != 0;
+    case LiteralType::FLOAT:
+        return literal.getFloat() != 0.0;
+    default:
+        return false;
     }
 }
 
-std::unique_ptr<Expr> Interpreter::visitLogicalExpr(LogicalExpr *expr)
+#include "InterpreterExp.cc"
+
+
+
+std::shared_ptr<Expr> Interpreter::visitNowExpr(NowExpr *expr)
 {
-    auto leftVal = evaluate(std::move(expr->left));
-    auto rightVal = evaluate(std::move(expr->right));
+    auto now = std::chrono::high_resolution_clock::now();
+    auto duration = now.time_since_epoch();
+    auto seconds = std::chrono::duration_cast<std::chrono::duration<double>>(duration).count();
 
-    if (leftVal->getType() == ExprType::LITERAL && rightVal->getType() == ExprType::LITERAL)
-    {
-        LiteralExpr *leftLiteral = dynamic_cast<LiteralExpr*>(leftVal.get());
-        LiteralExpr *rightLiteral = dynamic_cast<LiteralExpr*>(rightVal.get());
+    return createFloatLiteral(static_cast<double>(seconds));
 
-            bool leftBool = literalToBool(*leftLiteral->value);
-            bool rightBool = literalToBool(*rightLiteral->value);
-            if (expr->op.type == TokenType::AND)
-            {
-                return createBoolLiteral(leftBool && rightBool);
-            }
-            else if (expr->op.type == TokenType::OR)
-            {
-                return createBoolLiteral(leftBool || rightBool);
-            } else if (expr->op.type == TokenType::XOR)
-            {
-                return createBoolLiteral(leftBool != rightBool);
-            }
-            
-        
-    }
-    else
-    {
-        Error(expr->op, "Logical operation on non-literal");
-        return createBoolLiteral(false);
-    }
-
-    Warning( "Failed to evaluate logical expression");
-   return createBoolLiteral(false);
+    
+    
+    
+    
 }
 
-
-std::unique_ptr<Expr> Interpreter::visitGroupingExpr(GroupingExpr *expr)
+std::shared_ptr<Expr> Interpreter::visitEmptyExpr(EmptyExpr *expr)
 {
-    return evaluate(std::move(expr->expression));
+    return std::make_shared<EmptyExpr>();
 }
 
-
-std::unique_ptr<Expr> Interpreter::visitLiteralExpr(LiteralExpr *expr)
+std::shared_ptr<Expr> Interpreter::evaluate(const std::shared_ptr<Expr> &expr)
 {
-    if (expr->value->getType() == LiteralType::INT)
+    if (!expr)
     {
-        return createIntLiteral(expr->value->getInt());
-    } else if (expr->value->getType() == LiteralType::FLOAT)
-    {
-        return createFloatLiteral(expr->value->getFloat());
-    } else if (expr->value->getType() == LiteralType::BOOLEAN)
-    {
-        return createBoolLiteral(expr->value->getBool());
-    } else if (expr->value->getType() == LiteralType::STRING)
-    {
-        return createStringLiteral(expr->value->getString());
-    } else if (expr->value->getType() == LiteralType::POINTER)
-    {
-       
-        return createPointerLiteral(expr->value->getPointer());
+        Warning("Evaluate null expression");
+        return std::make_shared<EmptyExpr>();
     }
-  
-    Warning("Unknown literal type");
-    return nullptr;
-   
-}
-
-
-
-
-std::unique_ptr<Expr> Interpreter::evaluate(std::unique_ptr<Expr> expr)
-{
+   // std::cout<<"evaluate: "<<expr->toString()<<std::endl;
     return expr->accept(this);
 }
 
 
 
-std::unique_ptr<Expr> Interpreter::evaluate_ref(std::unique_ptr<Expr> &expr)
-{
-    return expr->accept(this);
-}
 
-void Interpreter::interpret(std::unique_ptr<Expr> expr)
+void Interpreter::execute(const std::shared_ptr<Stmt> &statement)
 {
-  std::unique_ptr<Expr> result =  evaluate(std::move(expr));
-  if (result)
-  {
-    if (result->getType() == ExprType::LITERAL)
-    {
-        LiteralExpr *literal = dynamic_cast<LiteralExpr*>(result.get());
-        std::cout <<"Result: ("<< literal->value->toString()<<")" << std::endl;
-    }
-     
-  } else 
-  {
-    std::cout <<"Result: (null)" << std::endl;
-  }
+
+   // Info("Interpreting statement: "+ statement->toString());
+    // if (statement->getType() == StmtType::WHILE)
+    // {
+    //     auto whileStmt = dynamic_cast<WhileStmt *>(statement.get());
+    //     visitWhileStmt(whileStmt);
+    //     return;
+    // }
+
+    statement->accept(this);
+
+
 }
 
 
 
-void Interpreter::interpret(std::vector<std::unique_ptr<Stmt>>& statements)
-{
-    for (auto& stmt : statements)
-    {
-        execute(stmt);
-    }
-}
-
-void Interpreter::execute(std::unique_ptr<Stmt>& statement)
+void Interpreter::execute(Stmt *statement)
 {
     statement->accept(this);
 }
 
+void Interpreter::run()
+{
 
-
-
+    scheduler.run();
+}
 
 void Interpreter::visitPrintStmt(PrintStmt *stmt)
- {
-    
-    auto result = evaluate(std::move(stmt->expression));
+{
+
+    auto result = evaluate(stmt->expression);
 
     if (!result)
     {
-        return ;
+        return;
     }
 
     if (result->getType() == ExprType::LITERAL)
     {
-        LiteralExpr *literal = dynamic_cast<LiteralExpr*>(result.get());
+        LiteralExpr *literal = dynamic_cast<LiteralExpr *>(result.get());
 
         if (literal->value->getType() == LiteralType::INT)
         {
-            std::cout << literal->value->getInt() << std::endl;
-        } else if (literal->value->getType() == LiteralType::FLOAT)
-        {
-            std::cout << literal->value->getFloat() << std::endl;
-        } else if (literal->value->getType() == LiteralType::BOOLEAN)
-        {
-            std::cout << literal->value->getBool() << std::endl;
-        } else if (literal->value->getType() == LiteralType::STRING)
-        {
-            std::cout << literal->value->getString() << std::endl;
-        } else if (literal->value->getType() == LiteralType::POINTER)
-        {
-            std::cout << literal->value->getPointer() << std::endl;
+           Log(3, "%d", literal->value->getInt());
         }
-    } else 
-    {
-       Warning("Cannot print non-literal expression");
+        else if (literal->value->getType() == LiteralType::FLOAT)
+        {
+            Log(3, "%f", literal->value->getFloat());
+        }
+        else if (literal->value->getType() == LiteralType::BOOLEAN)
+        {
+            Log(3, "%s", literal->value->getBool() ? "true" : "false");
+        }
+        else if (literal->value->getType() == LiteralType::STRING)
+        {
+            if (literal->value->getString() == nullptr)
+            {
+                Log(3, "NULL");
+            }
+            else
+            {
+                Log(3, "%s", literal->value->getString());
+            }
+        }
+        else if (literal->value->getType() == LiteralType::POINTER)
+        {
+            Log(3, "%p", literal->value->getPointer());
+        }
     }
+    else
+    {
+        Warning("Cannot print non-literal expression");
+    }
+}
 
-
-   
- }
-
-
-
-std::unique_ptr<Expr> Interpreter::visitVariableExpr(VariableExpr *expr)
+std::shared_ptr<Expr> Interpreter::visitVariableExpr(VariableExpr *expr)
 {
     std::string name = expr->name.lexeme;
-    int line = expr->name.line-1;
-
-    
+    int line = expr->name.line - 1;
 
     if (!this->environment->contains(name))
     {
-        Warning("Load variable  '" + name + "' not  defined at line: "+std::to_string(line));
-        return std::unique_ptr<EmptyExpr>();
+        Warning("Load variable  '" + name + "' not  defined at line: " + std::to_string(line));
+     return std::make_shared<EmptyExpr>();
     }
-    
 
-    Literal *value =  this->environment->get(name);
-    
+    Literal *value = this->environment->get(name).get();
+    if (!value)
+    {
+        Warning("Load variable  '" + name + "'is null at line: " + std::to_string(line));
+     return std::make_shared<EmptyExpr>();
+    }
+
+    //   return std::make_shared<LiteralExpr>(std::make_shared<Literal>(value));
+
     if (value->getType() == LiteralType::INT)
     {
         return createIntLiteral(value->getInt());
-    } else if (value->getType() == LiteralType::FLOAT)
+    }
+    else if (value->getType() == LiteralType::FLOAT)
     {
         return createFloatLiteral(value->getFloat());
-    } else if (value->getType() == LiteralType::BOOLEAN)
+    }
+    else if (value->getType() == LiteralType::BOOLEAN)
     {
         return createBoolLiteral(value->getBool());
-    } else if (value->getType() == LiteralType::STRING)
+    }
+    else if (value->getType() == LiteralType::STRING)
     {
         return createStringLiteral(value->getString());
-    } else if (value->getType() == LiteralType::POINTER)
+    }
+    else if (value->getType() == LiteralType::POINTER)
     {
         return createPointerLiteral(value->getPointer());
     }
 
-    return std::unique_ptr<EmptyExpr>();
-    
+    return std::make_shared<EmptyExpr>();
 }
 
-std::unique_ptr<Expr> Interpreter::visitAssignExpr(AssignExpr *expr)
+std::shared_ptr<Expr> Interpreter::visitAssignExpr(AssignExpr *expr)
 {
     std::string name = expr->name.lexeme;
-  
 
-    auto value = evaluate(std::move(expr->value));
+    auto value = evaluate(expr->value);
+    Literal *oldLiteral = this->environment->get(name).get();
 
-    if (!value || !this->environment->contains(name))
+    if (!value || !oldLiteral)
     {
-        Error(expr->name,"Can Assign, variable  '" + name + "' at line: "+std::to_string(expr->name.line));
-        return std::unique_ptr<EmptyExpr>();
+        Error(expr->name, "Can Assign, variable  '" + name + "' ");
+        return std::make_shared<EmptyExpr>();
     }
-       
-     if (value->getType() == ExprType::LITERAL)
-     {
-         LiteralExpr *literal = dynamic_cast<LiteralExpr*>(value.get());
-         Literal *lAssign = this->environment->get(name);
-   
-        if (literal->value->getType() == LiteralType::INT)
-        {
-           
-            if (lAssign->getType() != LiteralType::INT)
-            {
-                Warning("Cannot assign to non-int variable");
-                return value;
-            }
-            lAssign->setInt(literal->value->getInt());
 
-           
-        } else if (literal->value->getType() == LiteralType::FLOAT)
-        {
-            if (lAssign->getType() != LiteralType::FLOAT)
-            {
-                Warning("Cannot assign to non-float variable");
-                return value;
-            }
-            lAssign->setFloat(literal->value->getFloat());
-          
-        } else if (literal->value->getType() == LiteralType::BOOLEAN)
-        {
-            if (lAssign->getType() != LiteralType::BOOLEAN)
-            {
-                Warning("Cannot assign to non-boolean variable");
-                 return value;
-            }
-            lAssign->setBool(literal->value->getBool());
-           
-        } else if (literal->value->getType() == LiteralType::STRING)
-        {
-            if (lAssign->getType() != LiteralType::STRING)
-            {
-                Warning("Cannot assign to non-string variable");
-                return value;
-            }
-            lAssign->setString(literal->value->getString());
-          
-        } else if (literal->value->getType() == LiteralType::POINTER)
-        {
-            if (lAssign->getType() != LiteralType::POINTER)
-            {
-                Warning("Cannot assign to non-pointer variable");
-                return value;
-            }
-            lAssign->setPointer(literal->value->getPointer());
-         
-        }
-    } else 
+    if (value->getType() == ExprType::LITERAL)
     {
-       Warning("Cannot define non-literal expression");
+
+        LiteralExpr *literal = dynamic_cast<LiteralExpr *>(value.get());
+        if (!literal)
+        {
+            Error(expr->name, "Can Assign, variable  '" + name + "' ");
+            return std::make_shared<EmptyExpr>();
+        }
+
+        if (oldLiteral->getType() != literal->value->getType())
+        {
+
+            Error(expr->name, "Variable  '" + name + "' type not match");
+            return std::make_shared<EmptyExpr>();
+        }
+
+        this->environment->assign(name, literal->value);
+    }
+    else
+    {
+        Warning("Cannot assign non-literal expression");
     }
 
     return value;
 }
 
-void Interpreter::visitVarStmt(VarStmt *stmt)
- {
-   
+void Interpreter::visitVarStmt(VarStmt *stmt) /// define variables
+{
 
-     auto value = evaluate_ref(stmt->initializer);
-     if (!value)
-     {
-        for (auto& name : stmt->names)
+    auto value = evaluate(stmt->initializer);
+    if (!value)
+    {
+        for (auto &name : stmt->names)
         {
-            Warning("Can Assign, variable  '" + name.lexeme + "'");
+            Warning("Can define, variable  '" + name.lexeme + "'");
         }
         return;
-     }
-        
-     
-     if (value->getType() == ExprType::LITERAL)
-     {
-         LiteralExpr *literal = dynamic_cast<LiteralExpr*>(value.get());
+    }
 
-         for (auto& token : stmt->names)
-         {
-             std::string name = token.lexeme;
-            
-        
+    if (value->getType() == ExprType::LITERAL)
+    {
+        LiteralExpr *literal = dynamic_cast<LiteralExpr *>(value.get());
 
-
-
-        
-         if (literal->value->getType() == LiteralType::INT)
-         {
-             Literal *newLiteral = new Literal(literal->value->getInt());
-             if (!this->environment->define(name,  newLiteral))
-             {
-                 Warning("Variable '"+name+"' already defined at line: "+std::to_string(token.line));
-                 delete newLiteral;
-             }
-
-         } else if (literal->value->getType() == LiteralType::FLOAT)
-         {
-             Literal *newLiteral = new Literal(literal->value->getFloat());
-             if (!this->environment->define(name,  newLiteral))
-             {
-                 Warning("Variable '"+name+"' already defined at line: "+std::to_string(token.line));
-                 delete newLiteral;
-             }
-             
-         } else if (literal->value->getType() == LiteralType::BOOLEAN)
-         {
-             Literal *newLiteral = new Literal(literal->value->getBool());
-             if (!this->environment->define(name,  newLiteral))
-             {
-                 Warning("Variable '"+name+"' already defined at line: "+std::to_string(token.line));
-                 delete newLiteral;
-             }
-             
-         } else if (literal->value->getType() == LiteralType::STRING)
-         {
-             Literal *newLiteral = new Literal(literal->value->getString());
-             if (!this->environment->define(name,  newLiteral))
-             {
-                Warning("Variable '"+name+"' already defined at line: "+std::to_string(token.line));
-                 delete newLiteral;
-             }
-             
-         } else if (literal->value->getType() == LiteralType::POINTER)
-         {
-             Literal *newLiteral = new Literal(literal->value->getPointer());
-             if (!this->environment->define(name,  newLiteral))
-             {
-                 Warning("Variable '"+name+"' already defined at line: "+std::to_string(token.line));
-                 delete newLiteral;
-             }
-         }
+        for (auto &token : stmt->names)
+        {
+            std::string name = token.lexeme;
+            if (!this->environment->define(name, literal->value))
+            {
+                Warning("Variable '" + name + "' already defined at line: " + std::to_string(token.line));
+            }
         }
-
-     } else 
-     {
+    }
+    else
+    {
         Warning("Cannot define non-literal expression");
-     }
- }
+    }
+}
 
-
-
- void Interpreter::executeBlock(BlockStmt *stmt, Environment *env)
+void Interpreter::executeBlock(BlockStmt *stmt, const std::shared_ptr<Environment> &env)
 {
     auto previous = this->environment;
     this->environment = env;
-    for (auto& stmt : stmt->declarations)
+    for (auto stmt : stmt->declarations)
     {
-        execute(stmt);
+        try
+        {
+                
+            execute(stmt);
+
+            
+        }
+        catch (ReturnException &returnValue)
+        {
+            break;
+        }
     }
     this->environment = previous;
+    scheduler.run();
 }
 
 void Interpreter::visitBlockStmt(BlockStmt *stmt)
- {
+{
     this->currentDepth++;
-   // Environment *newEnv = new Environment(this->currentDepth, this->environment);
-     std::shared_ptr<Environment> newEnv = std::make_shared<Environment>(this->currentDepth,this->environment);
-   
-
-    executeBlock(stmt, newEnv.get());
+    std::shared_ptr<Environment> newEnv = std::make_shared<Environment>(this->currentDepth, this->environment);
+    executeBlock(stmt, newEnv);
     this->currentDepth--;
-    
- }
+}
 
 void Interpreter::visitExpressionStmt(ExpressionStmt *stmt)
- {
-     evaluate(std::move(stmt->expression));    
- }
+{
+    evaluate(stmt->expression);
+}
 
 void Interpreter::visitProgram(Program *stmt)
 {
-    for (auto& stmt : stmt->statements)
+    for (auto &stmt : stmt->statements)
     {
-        execute(stmt);
-    }   
+        try 
+        {
+              
+                    execute(stmt);
+
+            
+        }
+        catch (ReturnException &returnValue)
+        {
+            break;
+        }
+        
+    }
+
     execute(stmt->statement);
-     
+    scheduler.run();
+  
 }
 
 void Interpreter::visitEmptyStmt(EmptyStmt *stmt)
@@ -815,10 +354,16 @@ void Interpreter::visitEmptyStmt(EmptyStmt *stmt)
     Info("Interpreting empty statement");
 }
 
-void Interpreter::visitCallStmt(CallStmt *stmt)
-{
 
-    Info("TODO: Interpreting call statement");
+void Interpreter::visitProcedureStmt(ProcedureStmt *stmt)
+{
+    if (procedureList.find(stmt->name) != procedureList.end())
+    {
+        Error("Procedure '" + stmt->name + "' already defined ");
+        return;
+    }
+
+    procedureList[stmt->name] = stmt;
 }
 
 void Interpreter::visitProcedureCallStmt(ProcedureCallStmt *stmt)
@@ -827,178 +372,550 @@ void Interpreter::visitProcedureCallStmt(ProcedureCallStmt *stmt)
 
     if (procedureList.find(name) == procedureList.end())
     {
-        Warning("Procedure '"+name+"' not defined at line: "+std::to_string(stmt->name.line));
+        Error("Procedure '"+name+"' not defined at line: "+std::to_string(stmt->name.line));
         return;
     }
+
     ProcedureStmt *procedure = procedureList[name];
+    if (!procedure)
+    {
+        Error("Procedure '"+name+"' die");
+        return;
+    }
     
+
     unsigned int numArgsExpectd = procedure->parameter.size();
     unsigned int numArgs = stmt->arguments.size();
 
     if (numArgs != numArgsExpectd)
     {
-        Warning("Incorrect number of arguments passed to procedure '"+name+"' at line: "+std::to_string(stmt->name.line)+ " expected: "+std::to_string(numArgsExpectd)+" got: "+std::to_string( numArgs));
+        Error("Incorrect number of arguments passed to procedure '"+name+"' at line: "+std::to_string(stmt->name.line)+ " expected: "+std::to_string(numArgsExpectd)+" got: "+std::to_string( numArgs));
         return;
     }
     this->currentDepth++;
-   // Environment *newEnv = new Environment(this->currentDepth, this->environment);
-
     std::shared_ptr<Environment> newEnv = std::make_shared<Environment>(this->currentDepth,this->environment);
-   
-
-    
 
     for (unsigned int i = 0; i < numArgs; i++)
     {
-        std::unique_ptr<Expr> value =   evaluate(std::move(stmt->arguments[i]));
-        if (!value) 
+
+        std::shared_ptr<Expr> value =   evaluate(stmt->arguments[i]);
+        if (!value)
         {
-            Warning("Invalid argument passed to procedure '"+name+"' at line: "+std::to_string(stmt->name.line));
+            Error("Invalid argument passed to procedure '"+name+"' at line: "+std::to_string(stmt->name.line));
             return ;
         };
         std::string argName = procedure->parameter[i].get()->name;
+        
         if (value->getType() == ExprType::LITERAL)
         {
             LiteralExpr *literal = dynamic_cast<LiteralExpr*>(value.get());
-            if (literal->value->getType() == LiteralType::INT)
+            if (!newEnv->define(argName, literal->value))
             {
-                int value = literal->value->getInt();
-                newEnv->define(argName, new Literal(value));
-            } else if (literal->value->getType() == LiteralType::FLOAT)
-            {
-                float value = literal->value->getFloat();
-                newEnv->define(argName, new Literal(value));
-            } else if (literal->value->getType() == LiteralType::BOOLEAN)
-            {
-                bool value = literal->value->getBool();
-                newEnv->define(argName, new Literal(value));
-               
-            } else if (literal->value->getType() == LiteralType::STRING)
-            {
-                std::string value = literal->value->getString();
-                newEnv->define(argName, new Literal(value));
-            } else if (literal->value->getType() == LiteralType::POINTER)
-            {
-                newEnv->define(argName, new Literal(literal->value->getPointer()));
+                Error("Variable '"+argName+"' already defined at line: "+std::to_string(stmt->name.line));
+                return;
             }
-              
         }
     }
 
-   
-
     auto previous = this->environment;
-    this->environment = newEnv.get();
+    this->environment = newEnv;
     this->execute(procedure->body);
     this->environment = previous;
-
     this->currentDepth--;
-    
 
     
+    
 
-  
 }
 
-void Interpreter::visitProcedureStmt(ProcedureStmt *stmt)
+
+std::shared_ptr<Expr> Interpreter::visitFunctionCallExpr(FunctionCallExpr *expr)
 {
-    if (procedureList.find(stmt->name) != procedureList.end())
+
+
+
+    std::string name = expr->name.lexeme;
+
+    if (functionList.find(name) == functionList.end())
     {
-        Warning("Procedure '"+stmt->name+"' already defined ");
+        Error("Function '" + name + "' not defined at line: " + std::to_string(expr->name.line));
+        return std::make_shared<EmptyExpr>();
+    }
+    FunctionStmt *function = functionList[name];
+    if (!function)
+    {
+        Error("Function '" + name + "' die");
+        return std::make_shared<EmptyExpr>();
+    }
+
+    unsigned int numArgsExpectd = function->parameter.size();
+    unsigned int numArgs = expr->arguments.size();
+
+    if (numArgs != numArgsExpectd)
+    {
+        Error("Incorrect number of arguments passed to function '" + name + "' at line: " + std::to_string(expr->name.line) + " expected: " + std::to_string(numArgsExpectd) + " got: " + std::to_string(numArgs));
+        return std::make_shared<EmptyExpr>();
+    }
+    this->currentDepth++;
+    std::shared_ptr<Environment> newEnv = std::make_shared<Environment>(this->currentDepth, this->environment);
+    for (unsigned int i = 0; i < numArgs; i++)
+    {
+        std::shared_ptr<Expr> value = evaluate(expr->arguments[i]);
+        if (!value)
+        {
+            Error(expr->name, "Invalid argument passed to function '" + name + "' at line: " + std::to_string(expr->name.line));
+            return std::make_shared<EmptyExpr>();
+        };
+        std::string argName = function->parameter[i].get()->name;
+        if (value->getType() == ExprType::LITERAL)
+        {
+            LiteralExpr *literal = dynamic_cast<LiteralExpr *>(value.get());
+            if (!newEnv->define(argName, literal->value))
+            {
+                Error(expr->name, "Variable '" + argName + "' already defined at line: " + std::to_string(expr->name.line));
+                return std::make_shared<EmptyExpr>();
+            }
+        }
+    }
+
+    auto previous = this->environment;
+    this->environment = newEnv;
+    std::shared_ptr<Expr> result = nullptr;
+    BlockStmt *block = dynamic_cast<BlockStmt *>(function->body.get());
+    try
+    {
+        for (auto stmt : block->declarations)
+        {
+            execute(stmt);
+        }  
+    }
+    catch (ReturnException &returnValue)
+    {
+        result = returnValue.value;
+        if (!result) result = std::make_shared<EmptyExpr>();
+        if (result->getType() == ExprType::LITERAL)
+        {
+            LiteralExpr *literal = dynamic_cast<LiteralExpr*>(result.get());
+            if (literal->value->getType() != function->returnType)
+            {
+                this->environment = previous;
+                Error("Invalid function return type");
+            } 
+        } else 
+        {
+            Log(0, "Function return value: %s", result->toString().c_str());
+        }
+    }
+    this->environment = previous;
+    this->currentDepth--;
+    return result;
+}
+
+
+
+void Interpreter::visitFunctionStmt(FunctionStmt *stmt)
+{
+    if (functionList.find(stmt->name) != functionList.end())
+    {
+        Error( "Function '" + stmt->name + "' already defined");
+        
+    }
+
+    functionList[stmt->name] = stmt;
+}
+
+void Interpreter::visitReturnStmt(ReturnStmt *stmt)
+{
+
+    std::shared_ptr<Expr> value = evaluate(stmt->value);
+    if (!value)
+    {
+        Error("RETURN: invalid  value ");
+    }
+    throw ReturnException(value);
+}
+void Interpreter::visitIfStmt(IfStmt *stmt)
+{
+    if (isTruthy(evaluate(stmt->condition)))
+    {
+        execute(stmt->thenBranch);
         return;
     }
- //   Info("TODO: CREATE procedure : "+stmt->name);
-    procedureList[stmt->name] = stmt;
+
+    for (const auto& elif : stmt->elifBranch)
+    {
+        if (isTruthy(evaluate(elif->condition)))
+        {
+            execute(elif->thenBranch);
+            return;
+        }
+    }
+
+    if (stmt->elseBranch != nullptr)
+    {
+        execute(stmt->elseBranch);
+    }
 }
+
+void Interpreter::visitWhileStmt(WhileStmt *stmt)
+{
+
+   // scheduler.addTask(std::make_unique<WhileTask>(stmt, this));
+
+
+    if (!stmt)
+    {
+        Error("invalid while condition expression");
+        return;
+    }
+    while (true)
+    {
+        auto result = evaluate(stmt->condition);
+
+        if (!result)
+        {
+            Error("invalid condition expression");
+            return;
+        }
+
+        if (!isTruthy(result))
+        {
+            break;
+        }
+
+        execute(stmt->body);
+    }
+}
+
+void Interpreter::visitBreakStmt(BreakStmt *stmt)
+{
+
+    throw BreakException();
+}
+
+void Interpreter::visitContinueStmt(ContinueStmt *stmt)
+{
+
+    throw ContinueException();
+}
+
+void Interpreter::visitRepeatStmt(RepeatStmt *stmt)
+{
+
+    if (!stmt)
+    {
+        Error("invalid repeat condition expression");
+        return;
+    }
+    try
+    {
+        do
+        {
+            try
+            {
+                execute(stmt->body);
+            }
+            catch (ContinueException &)
+            {
+                // Do nothing, just continue the loop
+            }
+
+            auto result = evaluate(stmt->condition);
+            if (!result)
+            {
+                Error("invalid condition expression");
+                return;
+            }
+
+            if (isTruthy(result))
+            {
+                break;
+            }
+
+
+        } while (true);
+    }
+    catch (BreakException &)
+    {
+        // Exit the loop
+    }
+}
+
+void Interpreter::visitLoopStmt(LoopStmt *stmt)
+{
+
+    if (!stmt)
+    {
+        Error("invalid repeat condition expression");
+        return;
+    }
+    try
+    {
+        while(true)
+        {
+            try
+            {
+                execute(stmt->body);
+            }
+            catch (ContinueException &)
+            {
+                // Do nothing, just continue the loop
+            }
+        }
+    }
+    catch (BreakException &)
+    {
+        // Exit the loop
+    }
+}
+
+void Interpreter::visitSwitchStmt(SwitchStmt *stmt)
+{
+
+    if (!stmt)
+    {
+        Error("invalid switch expression");
+        return;
+    }
+
+    auto switch_value = evaluate(stmt->expression);
+    if (!switch_value)
+    {
+        Error("invalid switch expression");
+        return;
+    }
+
+    LiteralExpr *literal = dynamic_cast<LiteralExpr*>(switch_value.get());
+    if (!literal)
+    {
+        Error("invalid switch expression");
+        return;
+    }
+
+    for (const auto& caseStmt : stmt->cases)
+    {
+
+        auto result = evaluate(caseStmt->value);
+        if (!result)
+        {
+            Error("invalid switch expression");
+            return;
+        }
+        LiteralExpr *literalValue = dynamic_cast<LiteralExpr*>(result.get());
+        if (Equal(literal, literalValue))
+        {
+            execute(caseStmt->body);
+            return;
+        }
+    }
+    if (stmt->default_case)
+    {
+        execute(stmt->default_case);
+    }
+}
+
+void Interpreter::visitForStmt(ForStmt *stmt)
+{
+  if (!stmt)
+    {
+        Error("invalid for statement");
+        return;
+    }
+
+    try
+    {
+        if (stmt->initializer)
+        {
+   
+            execute(stmt->initializer);
+        }
+
+        while (true)
+        {
+            if (stmt->condition)
+            {
+                auto conditionResult = evaluate(stmt->condition);
+                if (!conditionResult)
+                {
+                    Error("invalid condition expression");
+                    return;
+                }
+
+                if (!isTruthy(conditionResult))
+                {
+            
+                    break;
+                }
+            }
+
+            try
+            {
+
+                execute(stmt->body);
+            }
+            catch (ContinueException &)
+            {
+                // Continue to the next iteration of the loop
+            }
+
+            if (stmt->step)
+            {
+      
+                evaluate(stmt->step);
+            }
+        }
+    }
+    catch (BreakException &)
+    {
+        // Exit the loop
+    }
+}
+
+bool Interpreter::isTruthy(const std::shared_ptr<Expr>& expr)
+{
+    if (!expr)
+    {
+        Warning("invalid condition expression");
+        return false;
+    }
+    
+    if (expr->getType() == ExprType::LITERAL)
+    {
+        LiteralExpr *literal = dynamic_cast<LiteralExpr*>(expr.get());
+        if (literal && literal->value)
+        {
+            return literal->value->isTrue();
+        }
+    }
+    
+    Warning("non-literal expression in condition");
+    return false;
+}
+
 
 //********************************************************************************** */
 
-
-void Interpreter::Error(const Token &token,const std::string &message)
+void Interpreter::Error(const Token &token, const std::string &message)
 {
     panicMode = true;
     int line = token.line;
-    std::string text ="ERROR: " +message+ " at line: " +std::to_string(line);
-    std::cout<<text<<std::endl;
+    std::string text =message + " at line: " + std::to_string(line);
+
+    Log(2, text.c_str());
+    throw FatalException(text);
+}
+void Interpreter::Error( const std::string &message)
+{
+    panicMode = true;
+
+    std::string text = message;
+
+    Log(2, text.c_str());
+    throw FatalException(text);
+}
+
+bool Interpreter::Equal(LiteralExpr *a, LiteralExpr *b)
+{
+
+    if (!a || !b)
+    {
+        Error("invalid literal match");
+        return false;
+    }
+    if (a->getType() != b->getType()) 
+    {
+        Error("invalid literal match type");
+        return false;
+    }
+
+    if (a->value->getType() == LiteralType::BOOLEAN && b->value->getType() == LiteralType::BOOLEAN)
+    {
+        return (a->value->getBool() == b->value->getBool());
+    } else if (a->value->getType() == LiteralType::STRING && b->value->getType() == LiteralType::STRING)
+    {
+        return (a->value->getString() == b->value->getString());
+    }
+    else if (a->value->getType() == LiteralType::INT && b->value->getType() == LiteralType::INT)
+    {
+        return (a->value->getInt() == b->value->getInt());
+    }
+    else if (a->value->getType() == LiteralType::FLOAT && b->value->getType() == LiteralType::FLOAT)
+    {
+        return (a->value->getFloat() == b->value->getFloat());
+    }
+    return false;
 }
 
 void Interpreter::Warning(const std::string &message)
 {
-    
-    std::string text ="WARNING: " +message;
-    std::cout<<text<<std::endl;
+
+    std::string text = message;
+    Log(1, text.c_str());
 }
 
 void Interpreter::Info(const std::string &message)
 {
-   std::string text ="INFO: " +message;
-    std::cout<<text<<std::endl;
+    std::string text = "INFO: " + message;
+    Log(0, text.c_str());
+
 }
 
-std::unique_ptr<LiteralExpr> Interpreter::createIntLiteral(int value)
+std::shared_ptr<LiteralExpr> Interpreter::createIntLiteral(int value)
 {
-    return std::make_unique<LiteralExpr>(std::make_unique<Literal>(value));
+
+    return LiteralPool::createIntLiteral(value);
 }
 
-std::unique_ptr<LiteralExpr> Interpreter::createFloatLiteral(float value)
+std::shared_ptr<LiteralExpr> Interpreter::createFloatLiteral(double value)
 {
-    return std::make_unique<LiteralExpr>(std::make_unique<Literal>(value));
+    return LiteralPool::createFloatLiteral(value);
 }
 
-std::unique_ptr<LiteralExpr> Interpreter::createStringLiteral(const std::string &value)
+std::shared_ptr<LiteralExpr> Interpreter::createStringLiteral(const std::string &value)
 {
-    return std::make_unique<LiteralExpr>(std::make_unique<Literal>(value));
+    return LiteralPool::createStringLiteral(value);
 }
 
-std::unique_ptr<LiteralExpr> Interpreter::createBoolLiteral(bool value)
+std::shared_ptr<LiteralExpr> Interpreter::createBoolLiteral(bool value)
 {
-   
-    return std::make_unique<LiteralExpr>(std::make_unique<Literal>(value));
+
+    return LiteralPool::createBoolLiteral(value);
 }
 
-std::unique_ptr<LiteralExpr> Interpreter::createPointerLiteral(void *value)
+std::shared_ptr<LiteralExpr> Interpreter::createPointerLiteral(void *value)
 {
-    return std::make_unique<LiteralExpr>(std::make_unique<Literal>(value));
+    return LiteralPool::createPointerLiteral(value);
 }
-
-
 
 //*****************************************************************************************
 
-Environment::Environment(int depth,Environment *parent):m_depth(depth),m_parent(parent)
+Environment::Environment(int depth, const std::shared_ptr<Environment> &parent) : m_depth(depth), m_parent(parent)
 {
-   // std::cout<<"Create Environment: "<< m_depth << std::endl;
+    // std::cout<<"Create Environment: "<< m_depth << std::endl;
 }
 
 Environment::~Environment()
 {
-
-  //  std::cout<<"Delete Environment: "<< m_depth << std::endl;
-    for (auto it = m_values.begin(); it != m_values.end(); ++it)
-    {
-       // std::cout<<"delete Variable: "<< it->first << " = " << it->second->toString() << std::endl;
-       delete it->second;
-    }
 }
 
-bool Environment::define(const std::string &name, Literal *value)
+bool Environment::define(const std::string &name, const std::shared_ptr<Literal> &value)
 {
     if (m_values.find(name) != m_values.end())
     {
         return false;
     }
     m_values[name] = value;
-    return true;    
+    return true;
 }
 
-Literal *Environment::get(const std::string &name)
+std::shared_ptr<Literal> Environment::get(const std::string &name)
 {
-    
+
     if (m_values.find(name) != m_values.end())
     {
         return m_values[name];
     }
-    if (m_parent!=nullptr)
+    if (m_parent != nullptr)
     {
         if (m_parent->contains(name))
         {
@@ -1006,18 +923,19 @@ Literal *Environment::get(const std::string &name)
         }
     }
 
-   return nullptr;
-
+    return nullptr;
 }
 
-bool Environment::assign(const std::string &name, Literal *value)
+bool Environment::assign(const std::string &name, const std::shared_ptr<Literal> &value)
 {
     if (contains(name))
     {
-        m_values[name] = value;
-        return true;
+        Literal *literal = m_values[name].get();
+        if (literal!=nullptr)
+            literal->copyFrom(value.get());
     }
-    if (m_parent!=nullptr)
+
+    if (m_parent != nullptr)
     {
         if (m_parent->contains(name))
         {
@@ -1025,16 +943,16 @@ bool Environment::assign(const std::string &name, Literal *value)
         }
     }
 
-   return false;
+    return false;
 }
 
 bool Environment::contains(const std::string &name)
-{  
-     if (m_values.find(name) != m_values.end())
+{
+    if (m_values.find(name) != m_values.end())
     {
         return true;
     }
-    if (m_parent!=nullptr)
+    if (m_parent != nullptr)
     {
         if (m_parent->contains(name))
         {
@@ -1042,5 +960,201 @@ bool Environment::contains(const std::string &name)
         }
     }
 
-   return false;
+    return false;
+}
+
+// //*****************************************************************************************
+
+LiteralPool::LiteralPool()
+{
+   // init(5);
+}
+
+LiteralPool::~LiteralPool()
+{
+    Log(0, "LiteralPool: %d", pool.size());
+    clear();
+}
+
+void LiteralPool::releaseLiteral(std::unique_ptr<Literal> literal)
+{
+        if (pool.size() < maxPoolSize) 
+        {
+               literal->clear();
+               pool.push_back(std::move(literal));
+        }
+}
+
+std::shared_ptr<Literal> LiteralPool::acquireLiteral()
+{
+     if (pool.empty()) 
+     {
+            return std::make_shared<Literal>();
+      }
+        std::shared_ptr<Literal> literal(pool.back().release(), 
+            [this](Literal* p) 
+            { 
+                this->releaseLiteral(std::unique_ptr<Literal>(p)); 
+            });
+        pool.pop_back();
+        return literal;
+}
+
+void LiteralPool::init(size_t size)
+{
+     for (size_t i = 0; i < size; ++i) 
+     {
+            pool.push_back(std::make_unique<Literal>());
+        }
+}
+
+std::shared_ptr<Literal> LiteralPool::acquireInt(int value)
+{
+
+         std::shared_ptr<Literal> literal = acquireLiteral();
+         literal->setInt(value);
+         return literal;
+    
+}
+
+std::shared_ptr<Literal> LiteralPool::acquireFloat(double value)
+{
+
+         std::shared_ptr<Literal> literal = acquireLiteral();
+         literal->setFloat(value);
+         return literal;
+  
+    
+}
+
+std::shared_ptr<Literal> LiteralPool::acquireBool(bool value)
+{
+
+         std::shared_ptr<Literal> literal = acquireLiteral();
+         literal->setBool(value);
+         return literal;
+   
+}
+
+std::shared_ptr<Literal> LiteralPool::acquireString(const std::string &value)
+{
+  
+
+         std::shared_ptr<Literal> literal = acquireLiteral();
+         literal->setString(value.c_str());
+         return literal;
+
+    
+}
+
+std::shared_ptr<Literal> LiteralPool::acquirePointer(void *value)
+{
+
+         std::shared_ptr<Literal> literal = acquireLiteral();
+         literal->setPointer(value);
+         return literal;
+  
+    
+}
+
+void LiteralPool::release(std::shared_ptr<Literal> literal)
+{
+    // literal->clear();
+    // pool.push_back(std::move((std::unique_ptr<Literal>(literal.get()))));
+    // literal.release();
+    
+}
+
+void LiteralPool::clear()
+{
+    Log(0, "LiteralPool: %d", pool.size());
+    pool.clear();
+}
+
+
+
+std::shared_ptr<LiteralExpr> LiteralPool::createIntLiteral(int value)
+{
+    if (USE_POOL)
+        return std::make_shared<LiteralExpr>(LiteralPool::Instance().acquireInt(value));
+    else
+        return std::make_shared<LiteralExpr>(std::move(std::make_shared<Literal>(value)));
+}
+
+std::shared_ptr<LiteralExpr> LiteralPool::createFloatLiteral(double value)
+{
+    if (USE_POOL)
+        return std::make_shared<LiteralExpr>(LiteralPool::Instance().acquireFloat(value));
+    else
+        return std::make_shared<LiteralExpr>(std::move(std::make_shared<Literal>(value)));
+}
+
+std::shared_ptr<LiteralExpr> LiteralPool::createStringLiteral(const std::string &value)
+{
+   // if (USE_POOL)
+    //    return std::make_shared<LiteralExpr>(LiteralPool::Instance().acquireString(value));
+   // else
+        return std::make_shared<LiteralExpr>(std::move(std::make_shared<Literal>(value.c_str())));
+}
+
+std::shared_ptr<LiteralExpr> LiteralPool::createBoolLiteral(bool value)
+{
+    if (USE_POOL)
+        return std::make_shared<LiteralExpr>(LiteralPool::Instance().acquireBool(value));
+    else
+        return std::make_shared<LiteralExpr>(std::move(std::make_shared<Literal>(value)));
+}
+
+std::shared_ptr<LiteralExpr> LiteralPool::createPointerLiteral(void *value)
+{
+    if (USE_POOL)
+        return std::make_shared<LiteralExpr>(LiteralPool::Instance().acquirePointer(value));
+    else
+        return std::make_shared<LiteralExpr>(std::move(std::make_shared<Literal>(value)));
+}
+
+void Scheduler::addTask(std::unique_ptr<Task> task)
+{
+    tasks.push(std::move(task));
+}
+
+void Scheduler::run()
+{
+    
+        while (!tasks.empty())
+        {
+            auto &task = tasks.front();
+            bool completed = task->run();
+            if (completed)
+            {
+                tasks.pop();
+            }
+            else
+            {
+
+                tasks.push(std::move(tasks.front()));
+                tasks.pop();
+            }
+        }
+    
+}
+
+bool WhileTask::run()
+{
+   
+     auto result = interpreter->evaluate(stmt->condition);
+    if (!result)
+    {
+        interpreter->Error("invalid condition expression");
+        return true; 
+    }
+
+    if (!interpreter->isTruthy(result))
+    {
+        return true; 
+    }
+
+    interpreter->execute(stmt->body);
+    return false; 
+
 }

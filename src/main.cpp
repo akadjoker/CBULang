@@ -5,7 +5,7 @@
 #include "Lexer.hpp"
 #include "Parser.hpp"
 #include "Interpreter.hpp"
-
+#include "Utils.hpp"
 
 
 std::string readFile(const std::string& filePath)
@@ -58,7 +58,10 @@ int main()
     try
     {
 
-         std::string code = readFile("main.pas");
+         std::string code = readFile("main.pc");
+         auto& pool = LiteralPool::Instance();
+         pool.setMaxPoolSize(100); // Define o tamanho máximo do pool para 10 objetos
+
 
         Lexer lexer = Lexer(code);
         std::vector<Token> tokens = lexer.scanTokens();
@@ -66,29 +69,34 @@ int main()
          {
              std::cout << token.toString() << std::endl;
          }
-        Parser parser = Parser(tokens);
-        //std::unique_ptr<Expr> result = parser.result();
-        std::unique_ptr<Stmt> program = parser.parse();
+         if (lexer.ready())
+         {
+            Parser parser = Parser(tokens);
+            std::shared_ptr<Stmt> program = parser.parse();
+            Interpreter interpreter;
+            if (program)
+            {
+            interpreter.execute(program);
+            interpreter.run();
+            }
+         }
+        
 
-        Interpreter interpreter;
-        if (program)
-        {
-           interpreter.execute(program);
-        }
-
-
-     
-
-      //  interpreter.interpret(std::move(result));
   
  
 }
+catch (const FatalException& e) 
+{
+        std::string text = e.what();
+        Log(2,"%s", text.c_str());
+}
 catch (const std::runtime_error& e) 
 {
-        std::cerr << " " << e.what() << std::endl;
-        }
+        std::string text = e.what();
+        Log(2,"%s", text.c_str());
+}
 
 
-std::cout<<"End"<<std::endl;
-    return 0;
+
+return 0;
 }

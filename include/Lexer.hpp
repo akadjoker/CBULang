@@ -18,6 +18,14 @@ private:
     std::vector<Token> tokens;
     std::unordered_map<std::string, TokenType> keywords;
     std::unordered_map<std::string, int> procedures;
+    std::unordered_map<std::string, int> functions;
+    std::unordered_map<std::string, int> processes;
+    std::stack<int> blocks;//begin end
+    std::stack<int> brackets;  // []
+    std::stack<int> braces;   // {}
+    std::stack<int> parens;   // ()
+
+
     
 
     char peek();
@@ -47,9 +55,14 @@ private:
 
     bool hasProcedure(const std::string &str);
 
+    bool hasFunction(const std::string &str);
+
+    bool hasProcess(const std::string &str);
+
 public:
     Lexer(const std::string &input);
     ~Lexer() = default;
     void scanToken();
+    bool ready();
     std::vector<Token> scanTokens();
 };
