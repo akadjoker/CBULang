@@ -6,6 +6,16 @@
 const bool USE_POOL = false;
 
 class Interpreter;
+class ExecutionContext;
+
+using LiteralPtr = std::shared_ptr<Literal>;
+typedef LiteralPtr (*NativeFunction)(ExecutionContext& ctx, int argc, LiteralPtr* argv);
+
+typedef struct 
+{
+    const char* name;
+    NativeFunction func;
+} NativeFuncDef;
 
 class ReturnException : public std::runtime_error
 {
@@ -32,6 +42,18 @@ class FatalException : public std::runtime_error
 {
 public:
     explicit FatalException(std::string message) : std::runtime_error(message) {}
+};
+
+
+class ExecutionContext 
+{
+public:
+    LiteralPtr asInt(int value);
+    LiteralPtr asFloat(double value);
+    LiteralPtr asString(const std::string &value);
+    LiteralPtr asString(const char &value);
+    LiteralPtr asBool(bool value);
+    LiteralPtr asPointer(void *value);
 };
 
 class Visitor
@@ -247,12 +269,15 @@ public:
 
     bool Equal(LiteralExpr *a, LiteralExpr *b);
 
+    void registerFunction(const std::string &name, NativeFunction function);
+
 private:
     friend class Parser;
     bool panicMode;
     unsigned int currentDepth;
     Scheduler scheduler;
     std::shared_ptr<Environment> environment;
+    std::shared_ptr<ExecutionContext> context;
     std::chrono::high_resolution_clock::time_point start_time;
     float time_elapsed();
 
@@ -262,9 +287,13 @@ private:
     std::shared_ptr<LiteralExpr> createBoolLiteral(bool value);
     std::shared_ptr<LiteralExpr> createPointerLiteral(void *value);
 
-    void executeBlock(BlockStmt *stmt, const std::shared_ptr<Environment> &env);
+    NativeFunction getNativeFunction(const std::string &name) const;
+    bool isNativeFunctionDefined(const std::string &name) const;
 
-    std::unordered_map<std::string, ProcedureStmt *> procedureList;
+        void executeBlock(BlockStmt * stmt, const std::shared_ptr<Environment> &env);
 
-    std::unordered_map<std::string, FunctionStmt *> functionList;
-};
+        std::unordered_map<std::string, ProcedureStmt *> procedureList;
+
+        std::unordered_map<std::string, FunctionStmt *> functionList;
+        std::unordered_map<std::string, NativeFunction> nativeFunctions;
+    };

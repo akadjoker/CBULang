@@ -27,6 +27,8 @@ void Literal::clear()
         value.stringValue = nullptr;
     }
 }
+
+
 bool Literal::isTrue() const
 {
     

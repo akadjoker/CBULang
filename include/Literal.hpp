@@ -83,4 +83,9 @@ public:
     bool copyFrom(const Literal *other);
 
     void clear();
+
+
+
+
+    
 };

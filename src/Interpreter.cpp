@@ -12,6 +12,7 @@ Interpreter::Interpreter()
 {
     currentDepth = 0;
     environment = std::make_shared<Environment>(0, nullptr);
+    context = std::make_shared<ExecutionContext>(environment);
     panicMode = false;
     start_time = std::chrono::high_resolution_clock::now();
     time_elapsed();
@@ -846,6 +847,12 @@ bool Interpreter::Equal(LiteralExpr *a, LiteralExpr *b)
     return false;
 }
 
+void Interpreter::registerFunction(const std::string &name, NativeFunction function)
+{
+
+    functions[name] = function;
+}
+
 void Interpreter::Warning(const std::string &message)
 {
 
@@ -885,6 +892,24 @@ std::shared_ptr<LiteralExpr> Interpreter::createBoolLiteral(bool value)
 std::shared_ptr<LiteralExpr> Interpreter::createPointerLiteral(void *value)
 {
     return LiteralPool::createPointerLiteral(value);
+}
+
+NativeFunction Interpreter::getNativeFunction(const std::string &name) const
+{
+
+    if (nativeFunctions.find(name) != nativeFunctions.end())
+    {
+
+        return nativeFunctions.at(name);
+    }
+    Error("Native function '" + name + "' not found.");
+    return nullptr;
+}
+
+bool Interpreter::isNativeFunctionDefined(const std::string &name) const
+{
+
+    return (nativeFunctions.find(name) != nativeFunctions.end());
 }
 
 //*****************************************************************************************
@@ -1157,4 +1182,30 @@ bool WhileTask::run()
     interpreter->execute(stmt->body);
     return false; 
 
+}
+
+
+LiteralPtr ExecutionContext::asInt(int value)
+{
+    return std::make_shared<Literal>(value);
+}
+
+LiteralPtr ExecutionContext::asFloat(double value)
+{
+    return std::make_shared<Literal>(value);
+}
+
+LiteralPtr ExecutionContext::asString(const char &value)
+{
+    return std::make_shared<Literal>(value);
+}
+
+LiteralPtr ExecutionContext::asBool(bool value)
+{
+    return std::make_shared<Literal>(value);
+}
+
+LiteralPtr ExecutionContext::asString(const std::string &value)
+{
+    return std::make_shared<Literal>(value.c_str());
 }
