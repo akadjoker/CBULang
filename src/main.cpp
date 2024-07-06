@@ -60,10 +60,10 @@ static const NativeFuncDef native_funcs[] = {
 
         Lexer lexer = Lexer(code);
         std::vector<Token> tokens = lexer.scanTokens();
-         for (Token token : tokens)
-         {
-             std::cout << token.toString() << std::endl;
-         }
+        //  for (Token token : tokens)
+        //  {
+        //      std::cout << token.toString() << std::endl;
+        //  }
          if (lexer.ready())
          {
             Parser parser = Parser(tokens);
