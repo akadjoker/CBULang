@@ -68,40 +68,37 @@ private:
 
      std::shared_ptr<Literal> number();
      std::shared_ptr<Literal> string();
+     std::shared_ptr<NativeFunctionExpr> defNativeCall(const std::shared_ptr<VariableExpr> &expr);
 
+     // Statements
+     std::shared_ptr<ExpressionStmt> expressionStatement();
 
+     std::shared_ptr<EmptyStmt> emptyDeclaration();
 
-    // Statements
-    std::shared_ptr<ExpressionStmt> expressionStatement();
+     std::shared_ptr<Stmt> declaration();    // declaration of variable in block
+     std::shared_ptr<Stmt> defDeclaration(); // declaration of functions/process in program
+     std::shared_ptr<Stmt> statement();
+     std::shared_ptr<ReturnStmt> returnStmt();
 
-    std::shared_ptr<EmptyStmt> emptyDeclaration();
+     std::shared_ptr<IfStmt> ifStmt();
+     std::shared_ptr<ForStmt> forStmt();
+     std::shared_ptr<WhileStmt> whileStmt();
+     std::shared_ptr<PrintStmt> printStmt();
+     std::shared_ptr<BlockStmt> blockStmt();
+     std::shared_ptr<Program> programStmt();
+     std::shared_ptr<SwitchStmt> switchStmt();
+     std::shared_ptr<RepeatStmt> repeatStmt();
+     std::shared_ptr<LoopStmt> loopStmt();
+     std::shared_ptr<BreakStmt> breakStmt();
+     std::shared_ptr<ContinueStmt> continueStmt();
 
-    std::shared_ptr<Stmt> declaration();    // declaration of variable in block
-    std::shared_ptr<Stmt> defDeclaration(); // declaration of functions/process in program
-    std::shared_ptr<Stmt> statement();
-    std::shared_ptr<ReturnStmt> returnStmt();
-   
-    std::shared_ptr<IfStmt> ifStmt();
-    std::shared_ptr<ForStmt> forStmt();
-    std::shared_ptr<WhileStmt> whileStmt();
-    std::shared_ptr<PrintStmt> printStmt();
-    std::shared_ptr<BlockStmt> blockStmt();
-    std::shared_ptr<Program> programStmt();
-    std::shared_ptr<SwitchStmt> switchStmt();
-    std::shared_ptr<RepeatStmt> repeatStmt();
-    std::shared_ptr<LoopStmt>   loopStmt();
-    std::shared_ptr<BreakStmt>    breakStmt();
-    std::shared_ptr<ContinueStmt> continueStmt();
-    
+     std::shared_ptr<ProcedureStmt> procedureStmt();     // declaration of procedure
+     std::shared_ptr<ProcedureCallStmt> procedureCall(); // call of procedure
 
-    std::shared_ptr<ProcedureStmt> procedureStmt();// declaration of procedure
-    std::shared_ptr<ProcedureCallStmt> procedureCall(); // call of procedure
+     std::shared_ptr<FunctionStmt> functionStmt();
+     std::shared_ptr<FunctionCallExpr> functionCall(const std::shared_ptr<Expr> &expr);
 
-    std::shared_ptr<FunctionStmt> functionStmt();
-    std::shared_ptr<FunctionCallExpr> functionCall(const std::shared_ptr<Expr> &expr);
-    
-
-    std::shared_ptr<VarStmt> varDeclaration(LiteralType type);
+     std::shared_ptr<VarStmt> varDeclaration(LiteralType type);
    
 
 

@@ -6,13 +6,17 @@
 
 
 
-
+uintptr_t getAddress(const void *ptr)  
+{
+        return reinterpret_cast<uintptr_t>(ptr);
+}
 
 Interpreter::Interpreter()
 {
     currentDepth = 0;
+    addressLoop = 0x0;
     environment = std::make_shared<Environment>(0, nullptr);
-    context = std::make_shared<ExecutionContext>(environment);
+    context = std::make_shared<ExecutionContext>(this);
     panicMode = false;
     start_time = std::chrono::high_resolution_clock::now();
     time_elapsed();
@@ -24,7 +28,9 @@ Interpreter::~Interpreter()
   
     procedureList.clear();
     functionList.clear();
+    nativeFunctions.clear();
 }
+
 
 
  float Interpreter::time_elapsed() 
@@ -512,7 +518,38 @@ std::shared_ptr<Expr> Interpreter::visitFunctionCallExpr(FunctionCallExpr *expr)
     return result;
 }
 
+std::shared_ptr<Expr> Interpreter::visitNativeFunctionExpr(NativeFunctionExpr *expr)
+{
+    const std::string  name = expr->name;
+    int line = expr->line - 1;
 
+    std::cout<<"Native function: '" << name << " line:  "<< std::to_string(line) << " call" << std::endl;
+    
+    if (nativeFunctions.find(name) == nativeFunctions.end())
+    {
+        Error("Native function '" + name + "' at line: " + std::to_string(line) +" not defined");
+        return std::make_shared<EmptyExpr>();
+    }
+
+    unsigned int numArgs = expr->parameters.size();
+    std::vector<Literal*> args;
+    for (const auto& arg :expr->parameters)
+    {
+        std::shared_ptr<Expr> value = evaluate(arg);
+        LiteralExpr *literal = dynamic_cast<LiteralExpr *>(value.get());
+        if (!literal)
+        {
+            Error("Invalid argument passed to function '" + name + "' at line: " + std::to_string(line));
+            return std::make_shared<EmptyExpr>();
+        };
+        args.push_back(std::move(literal->value.get()));
+    }
+
+    auto function = nativeFunctions[name];
+    LiteralPtr result = function(this->context.get(),numArgs, args.data());
+    return std::make_shared<LiteralExpr>(result);
+
+}
 
 void Interpreter::visitFunctionStmt(FunctionStmt *stmt)
 {
@@ -562,6 +599,7 @@ void Interpreter::visitWhileStmt(WhileStmt *stmt)
 {
 
    // scheduler.addTask(std::make_unique<WhileTask>(stmt, this));
+   
 
 
     if (!stmt)
@@ -569,6 +607,7 @@ void Interpreter::visitWhileStmt(WhileStmt *stmt)
         Error("invalid while condition expression");
         return;
     }
+    addressLoop = getAddress(stmt);
     while (true)
     {
         auto result = evaluate(stmt->condition);
@@ -576,6 +615,7 @@ void Interpreter::visitWhileStmt(WhileStmt *stmt)
         if (!result)
         {
             Error("invalid condition expression");
+            addressLoop = 0x0;
             return;
         }
 
@@ -585,17 +625,28 @@ void Interpreter::visitWhileStmt(WhileStmt *stmt)
         }
 
         execute(stmt->body);
+
     }
+    addressLoop = 0x0;
 }
 
 void Interpreter::visitBreakStmt(BreakStmt *stmt)
 {
-
+    if (addressLoop == 0x0)
+    {
+        Error("break outside of loop");
+        return;
+    }
     throw BreakException();
 }
 
 void Interpreter::visitContinueStmt(ContinueStmt *stmt)
 {
+    if (addressLoop == 0x0)
+    {
+        Error("continue outside of loop");
+        return;
+    }
 
     throw ContinueException();
 }
@@ -610,6 +661,7 @@ void Interpreter::visitRepeatStmt(RepeatStmt *stmt)
     }
     try
     {
+        addressLoop = getAddress(stmt);
         do
         {
             try
@@ -625,6 +677,7 @@ void Interpreter::visitRepeatStmt(RepeatStmt *stmt)
             if (!result)
             {
                 Error("invalid condition expression");
+                addressLoop = 0x0;
                 return;
             }
 
@@ -640,6 +693,7 @@ void Interpreter::visitRepeatStmt(RepeatStmt *stmt)
     {
         // Exit the loop
     }
+    addressLoop = 0x0;
 }
 
 void Interpreter::visitLoopStmt(LoopStmt *stmt)
@@ -652,6 +706,7 @@ void Interpreter::visitLoopStmt(LoopStmt *stmt)
     }
     try
     {
+        addressLoop = getAddress(stmt);
         while(true)
         {
             try
@@ -668,6 +723,7 @@ void Interpreter::visitLoopStmt(LoopStmt *stmt)
     {
         // Exit the loop
     }
+    addressLoop = 0x0;
 }
 
 void Interpreter::visitSwitchStmt(SwitchStmt *stmt)
@@ -725,6 +781,7 @@ void Interpreter::visitForStmt(ForStmt *stmt)
 
     try
     {
+        addressLoop = getAddress(stmt);
         if (stmt->initializer)
         {
    
@@ -739,6 +796,7 @@ void Interpreter::visitForStmt(ForStmt *stmt)
                 if (!conditionResult)
                 {
                     Error("invalid condition expression");
+                    addressLoop = 0x0;
                     return;
                 }
 
@@ -770,6 +828,7 @@ void Interpreter::visitForStmt(ForStmt *stmt)
     {
         // Exit the loop
     }
+    addressLoop = 0x0;
 }
 
 bool Interpreter::isTruthy(const std::shared_ptr<Expr>& expr)
@@ -847,11 +906,7 @@ bool Interpreter::Equal(LiteralExpr *a, LiteralExpr *b)
     return false;
 }
 
-void Interpreter::registerFunction(const std::string &name, NativeFunction function)
-{
 
-    functions[name] = function;
-}
 
 void Interpreter::Warning(const std::string &message)
 {
@@ -902,16 +957,23 @@ NativeFunction Interpreter::getNativeFunction(const std::string &name) const
 
         return nativeFunctions.at(name);
     }
-    Error("Native function '" + name + "' not found.");
     return nullptr;
 }
 
 bool Interpreter::isNativeFunctionDefined(const std::string &name) const
 {
-
     return (nativeFunctions.find(name) != nativeFunctions.end());
 }
+void Interpreter::registerFunction(const std::string &name, NativeFunction function)
+{
+    if (functionList.find(name) != functionList.end())
+    {
+        Error("Function '" + name + "' already defined");
+        return;
+    }
 
+    nativeFunctions[name] = function;
+}
 //*****************************************************************************************
 
 Environment::Environment(int depth, const std::shared_ptr<Environment> &parent) : m_depth(depth), m_parent(parent)
@@ -1204,6 +1266,43 @@ LiteralPtr ExecutionContext::asBool(bool value)
 {
     return std::make_shared<Literal>(value);
 }
+
+ExecutionContext::ExecutionContext(Interpreter *interpreter)
+{
+    this->interpreter = interpreter;
+}
+
+bool ExecutionContext::isTruthy(const LiteralPtr &value)
+{
+    return value->isTrue();
+}
+
+bool ExecutionContext::isEqual(const LiteralPtr &lhs, const LiteralPtr &rhs)
+{
+    return lhs->isEqual(rhs.get());
+}
+
+bool ExecutionContext::isString( Literal *value)
+{
+    return value->getType() == LiteralType::STRING;
+}
+
+bool ExecutionContext::isInt( Literal *value)
+{
+    return value->getType() == LiteralType::INT;
+}
+
+bool ExecutionContext::isFloat( Literal *value)
+{
+    return value->getType() == LiteralType::FLOAT;
+}
+
+bool ExecutionContext::isBool( Literal *value)
+{
+    return value->getType() == LiteralType::BOOLEAN;
+}
+
+
 
 LiteralPtr ExecutionContext::asString(const std::string &value)
 {

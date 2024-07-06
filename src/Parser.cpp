@@ -290,8 +290,8 @@ std::shared_ptr<Expr> Parser::call()
         if (match(TokenType::IDFUNCTION))
         {
             return functionCall(expr);
-        } else 
-
+        }        
+        else
         {
             break;
         }
@@ -360,6 +360,9 @@ std::shared_ptr<Expr> Parser::primary()
         {
             Token op = previous();
             return std::make_shared<UnaryExpr>(expr, op,false);
+        } if (match(TokenType::LEFT_PAREN) )
+        {
+            return defNativeCall(expr);
         }
 
         return expr;
@@ -782,6 +785,7 @@ std::shared_ptr<FunctionCallExpr> Parser::functionCall(const std::shared_ptr<Exp
 
     std::vector<std::shared_ptr<Expr>> arguments;
     Token name = previous();
+    
     consume(TokenType::LEFT_PAREN, "Expect '(' after function name.");
      
     if (match(TokenType::RIGHT_PAREN))
@@ -824,6 +828,37 @@ std::shared_ptr<ProcedureCallStmt> Parser::procedureCall()
     }while (!check(TokenType::RIGHT_PAREN) || !isAtEnd());
     consume(TokenType::SEMICOLON, "Expect ';' after procedure arguments.");
     return std::make_shared<ProcedureCallStmt>(name, std::move(arguments));
+}
+
+std::shared_ptr<NativeFunctionExpr> Parser::defNativeCall(const std::shared_ptr<VariableExpr> &expr)
+{
+
+    std::vector<std::shared_ptr<Expr>> arguments;
+    std::string name = expr->name.lexeme;
+    int line = expr->name.line;
+   
+     
+    if (match(TokenType::RIGHT_PAREN))
+    {
+     
+    }else 
+    do
+    {   
+            std::shared_ptr<Expr> value = expression();
+            if (value->getType() == ExprType::LITERAL)
+            {
+                arguments.push_back(value);
+            }
+            
+            if (match(TokenType::RIGHT_PAREN)) break;
+           
+            consume(TokenType::COMMA, "Expect ',' after arguments.");
+            
+    }while (!check(TokenType::RIGHT_PAREN) || !isAtEnd());
+
+    unsigned int arity = arguments.size();
+    return std::make_shared<NativeFunctionExpr>(name,line, std::move(arguments), arity);
+  
 }
 
 std::shared_ptr<ExpressionStmt> Parser::expressionStatement()

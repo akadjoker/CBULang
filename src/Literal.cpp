@@ -42,6 +42,22 @@ bool Literal::isTrue() const
     return false;
 }
 
+bool Literal::isEqual(const Literal *other) const
+{
+
+    if (type != other->type)
+        return false;
+    if (type == LiteralType::STRING)
+        return value.stringValue == other->value.stringValue;
+    else if (type == LiteralType::FLOAT)
+        return value.floatValue == other->value.floatValue;
+    else if (type == LiteralType::BOOLEAN)
+        return value.boolValue == other->value.boolValue;
+    else
+        return value.intValue == other->value.intValue;
+    return false;
+}
+
 Literal::Literal(const Literal &other) : type(other.type)
 {
     copyValue(other);

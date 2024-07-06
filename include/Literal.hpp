@@ -79,6 +79,7 @@ public:
     void setBool(bool value);
 
     bool isTrue() const;
+    bool isEqual(const Literal *other) const;
 
     bool copyFrom(const Literal *other);
 

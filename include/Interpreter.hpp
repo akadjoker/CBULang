@@ -9,7 +9,8 @@ class Interpreter;
 class ExecutionContext;
 
 using LiteralPtr = std::shared_ptr<Literal>;
-typedef LiteralPtr (*NativeFunction)(ExecutionContext& ctx, int argc, LiteralPtr* argv);
+using LiteralList = Literal*;
+typedef LiteralPtr (*NativeFunction)(ExecutionContext* ctx, int argc, LiteralList* argv);
 
 typedef struct 
 {
@@ -45,15 +46,32 @@ public:
 };
 
 
+
+
 class ExecutionContext 
 {
 public:
+    ~ExecutionContext()=default;
+    ExecutionContext(Interpreter *interpreter);
+    bool isTruthy(const LiteralPtr &value);
+    bool isEqual(const LiteralPtr &lhs, const LiteralPtr &rhs);
+
+    bool isString( Literal *value);
+    bool isInt( Literal *value);
+    bool isFloat( Literal *value);
+    bool isBool( Literal *value);
+    
     LiteralPtr asInt(int value);
     LiteralPtr asFloat(double value);
     LiteralPtr asString(const std::string &value);
     LiteralPtr asString(const char &value);
     LiteralPtr asBool(bool value);
     LiteralPtr asPointer(void *value);
+private:
+    friend class Interpreter;
+    
+    
+    Interpreter *interpreter;
 };
 
 class Visitor
@@ -79,6 +97,7 @@ public:
     virtual std::shared_ptr<Expr> visitVariableExpr(VariableExpr *expr) = 0;
 
     virtual std::shared_ptr<Expr> visitFunctionCallExpr(FunctionCallExpr *expr) = 0;
+    virtual std::shared_ptr<Expr> visitNativeFunctionExpr(NativeFunctionExpr *expr) = 0;
 
     virtual void visitProcedureStmt(ProcedureStmt *stmt) = 0;
     virtual void visitFunctionStmt(FunctionStmt *stmt) = 0;
@@ -219,6 +238,7 @@ public:
     std::shared_ptr<Expr> visitVariableExpr(VariableExpr *expr);
     std::shared_ptr<Expr> visitAssignExpr(AssignExpr *expr);
     std::shared_ptr<Expr> visitFunctionCallExpr(FunctionCallExpr *expr);
+    std::shared_ptr<Expr> visitNativeFunctionExpr(NativeFunctionExpr *expr);
 
 
 
@@ -275,6 +295,7 @@ private:
     friend class Parser;
     bool panicMode;
     unsigned int currentDepth;
+    uintptr_t addressLoop;
     Scheduler scheduler;
     std::shared_ptr<Environment> environment;
     std::shared_ptr<ExecutionContext> context;

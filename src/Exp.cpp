@@ -64,4 +64,8 @@ std::shared_ptr<Expr> FunctionCallExpr::accept(Visitor *visitor)
 {
     return visitor->visitFunctionCallExpr(this);
 }
-    
+
+std::shared_ptr<Expr> NativeFunctionExpr::accept(Visitor *visitor)
+{
+    return visitor->visitNativeFunctionExpr(this);
+}

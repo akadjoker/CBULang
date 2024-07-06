@@ -4,6 +4,7 @@
 
 class Visitor;
 
+
 enum ExprType 
 {
     NONE,
@@ -16,7 +17,8 @@ enum ExprType
     ASSIGN,
     LOGICAL,
     NOW,
-    CALL
+    CALL,
+    NATIVE
 };
 
 struct FunctionStmt;
@@ -57,7 +59,9 @@ struct Expr
             case NOW:
                 return "Now";
             case CALL:
-                return "Call";   
+                return "Call";
+            case NATIVE:
+                return "Native";   
             default:
                 return "Unknow: "+std::to_string((int)getType());
         }
@@ -197,3 +201,21 @@ struct FunctionCallExpr : public Expr
     ExprType getType() const override { return ExprType::CALL; }
     std::shared_ptr<Expr> accept(Visitor *visitor) override;
 };
+
+
+
+struct NativeFunctionExpr : public Expr
+{
+    std::string name;
+    int line;
+    std::vector<std::shared_ptr<Expr>> parameters;
+    unsigned int arity;
+
+    NativeFunctionExpr(const std::string &name,int line, std::vector<std::shared_ptr<Expr>> parameters, unsigned int arity)
+        : name(name), line(line),parameters(std::move(parameters)), arity(arity) {}
+
+    ExprType getType() const override { return ExprType::NATIVE; }
+
+    std::shared_ptr<Expr> accept(Visitor *visitor) override;
+};
+

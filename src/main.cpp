@@ -21,39 +21,34 @@ std::string readFile(const std::string& filePath)
     return buffer.str();
 }
 
+LiteralPtr native_writeln(ExecutionContext* ctx, int argc, LiteralList* argv) 
+{
+    for (int i = 0; i < argc; i++)
+    {
+            if (ctx->isString(argv[i]))
+            {
+                std::cout << argv[i]->getString();
+            }
+            else if (ctx->isInt(argv[i]))
+            {
+                std::cout << argv[i]->getInt();
+            }
+            else if (ctx->isFloat(argv[i]))
+            {
+                std::cout << argv[i]->getFloat();
+            }
+    }
+    std::cout<< std::endl;
+    return ctx->asBool(true);
+}
+
 
 int main()
 {
-
-    // std::string code = R"(
-
-    //     program main;
-
- 
-
-    //     begin
-           
-    //        int a = 10;
-
-    //         print(a);
-
-    //         begin
-    //             int c;
-
-    //             print(c);
-    //             c =200;
-    //             print(c);
-
-    //             c = d;
-    //             print(a);
-
-    //         end
-        
-           
-    //     end.
-       
-       
-    //     )";
+static const NativeFuncDef native_funcs[] = {
+    {"writeln", native_writeln},
+    {NULL, NULL}
+};
 
     try
     {
@@ -74,6 +69,11 @@ int main()
             Parser parser = Parser(tokens);
             std::shared_ptr<Stmt> program = parser.parse();
             Interpreter interpreter;
+            //interpreter.registerFunction("writeln", native_writeln);
+            for (const NativeFuncDef* def = native_funcs; def->name != NULL; def++) 
+            {
+                interpreter.registerFunction(def->name, def->func);
+            }
             if (program)
             {
             interpreter.execute(program);
