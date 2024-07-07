@@ -151,13 +151,55 @@ std::shared_ptr<Expr> Parser::assignment()
     Token name = previous();
     if (match(TokenType::EQUAL))
     {
-        std::shared_ptr<Expr> value = assignment();
-     
-      //  std::cout<<"Assign: "<<name.lexeme<< " "<< expr->toString()+" = "<<value->toString() << std::endl;
-
+         std::shared_ptr<Expr> value = assignment();
          if (expr->getType() == ExprType::VARIABLE)
          {
             return  std::make_shared<AssignExpr>(name, value);
+         }
+
+    } else 
+    if (match(TokenType::PLUS_EQUAL))
+    {
+         std::shared_ptr<Expr> value = assignment();
+         if (expr->getType() == ExprType::VARIABLE)
+         {
+            Token token = Token(TokenType::PLUS_EQUAL, name.lexeme,name.literal, name.line);
+            std::shared_ptr<Expr> addition = std::make_shared<BinaryExpr>(expr, value, token);
+            return std::make_shared<AssignExpr>(name, addition);
+         }
+
+    } else if (match(TokenType::MINUS_EQUAL))
+    {
+         std::shared_ptr<Expr> value = assignment();
+         if (expr->getType() == ExprType::VARIABLE)
+         {
+            Token token = Token(TokenType::MINUS_EQUAL, name.lexeme,name.literal, name.line);
+            std::shared_ptr<Expr> addition = std::make_shared<BinaryExpr>(expr, value, token);
+            return std::make_shared<AssignExpr>(name, addition);
+            
+         }
+
+    } else if (match(TokenType::STAR_EQUAL))
+    {
+         std::shared_ptr<Expr> value = assignment();
+         if (expr->getType() == ExprType::VARIABLE)
+         {
+            Token token = Token(TokenType::STAR_EQUAL, name.lexeme,name.literal, name.line);
+            std::shared_ptr<Expr> addition = std::make_shared<BinaryExpr>(expr, value, token);
+            return std::make_shared<AssignExpr>(name, addition);
+           
+         }
+
+    } else if (match(TokenType::SLASH_EQUAL))
+    {
+         std::shared_ptr<Expr> value = assignment();
+         if (expr->getType() == ExprType::VARIABLE)
+         {
+
+            Token token = Token(TokenType::SLASH_EQUAL, name.lexeme,name.literal, name.line);
+            std::shared_ptr<Expr> addition = std::make_shared<BinaryExpr>(expr, value, token);
+            return std::make_shared<AssignExpr>(name, addition); 
+           
          }
 
     }
@@ -327,7 +369,7 @@ std::shared_ptr<Expr> Parser::primary()
     if (match(TokenType::NIL))
     {
    
-        return LiteralPool::createPointerLiteral(nullptr);
+        return LiteralPool::createNumberLiteral(0);
    
     }
     if (match(TokenType::STRING))
@@ -336,17 +378,12 @@ std::shared_ptr<Expr> Parser::primary()
      
         return LiteralPool::createStringLiteral(value);
     }
-    if (match(TokenType::INT))
-    {
-        int value =std::stoi(previous().literal);
-       
-        return LiteralPool::createIntLiteral(value);
-    }
-    if (match(TokenType::FLOAT))
+    
+    if (match(TokenType::NUMBER))
     {
         double value =std::stod(previous().literal);
        
-        return LiteralPool::createFloatLiteral(value);
+        return LiteralPool::createNumberLiteral(value);
     }
 
   
@@ -396,7 +433,7 @@ std::shared_ptr<Stmt> Parser::statement()
     }
     if (match(TokenType::BEGIN))
     {
-        countBegins++;
+        
         return blockStmt();
     }
     if (match(TokenType::IDPROCEDURE))
@@ -496,7 +533,7 @@ std::shared_ptr<ForStmt> Parser::forStmt()
     {
         Error(peek(),"Missing 'for' initializer."); 
     }else 
-    if (match({TokenType::IDINT, TokenType::IDFLOAT}))
+    if (match({TokenType::NUMBER}))
     {
         initializer = declaration();
     }
@@ -550,12 +587,13 @@ std::shared_ptr<BlockStmt> Parser::blockStmt()
     
     std::vector<std::shared_ptr<Stmt>> statements;
 
-    while (!check(TokenType::END) && !isAtEnd())
+     while (!check(TokenType::END) && !isAtEnd()) 
     {
-        
+    
         statements.push_back(declaration());
     }
     consume(TokenType::END,"Expect 'end' after block.");
+    match(TokenType::SEMICOLON);
     return std::make_shared<BlockStmt>(std::move(statements));
 }
 
@@ -626,9 +664,9 @@ std::shared_ptr<RepeatStmt> Parser::repeatStmt()
 
 std::shared_ptr<LoopStmt> Parser::loopStmt()
 {
-
-    std::shared_ptr<Stmt> body = statement();
-    return std::make_shared<LoopStmt>( std::move(body));
+        match(TokenType::SEMICOLON);
+        std::shared_ptr<Stmt> body = statement();
+        return std::make_shared<LoopStmt>(std::move(body));
 }
 
 std::shared_ptr<BreakStmt> Parser::breakStmt()
@@ -654,18 +692,12 @@ std::shared_ptr<FunctionStmt> Parser::functionStmt()
         do
         {
             
-            if (match(TokenType::IDINT))
-            {
-                  Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                  std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createIntLiteral(INT32_MAX);
-                  std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
-                  parameter.push_back(arg);
-            } else 
-            if (match(TokenType::IDFLOAT))
+           
+            if (match(TokenType::IDNUMBER))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
                     
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createFloatLiteral(MAXFLOAT);
+                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createNumberLiteral(MAXFLOAT);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
 
@@ -693,13 +725,10 @@ std::shared_ptr<FunctionStmt> Parser::functionStmt()
     consume(TokenType::RIGHT_PAREN,"Expect ')' after function arguments."); 
     consume(TokenType::COLON,"Expect ':' after function arguments."); 
 
-    if (match(TokenType::IDINT))
+     
+    if (match(TokenType::IDNUMBER))
     {
-        returnType = LiteralType::INT;
-    } else 
-    if (match(TokenType::IDFLOAT))
-    {
-        returnType = LiteralType::FLOAT;
+        returnType = LiteralType::NUMBER;
     } else 
     if (match(TokenType::IDSTRING))
     {
@@ -741,18 +770,12 @@ std::shared_ptr<ProcedureStmt> Parser::procedureStmt()
         do
         {
             
-            if (match(TokenType::IDINT))
-            {
-                  Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                  std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createIntLiteral(INT32_MAX);
-                  std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
-                  parameter.push_back(arg);
-            } else 
-            if (match(TokenType::IDFLOAT))
+          
+            if (match(TokenType::IDNUMBER))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
                     
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createFloatLiteral(MAXFLOAT);
+                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createNumberLiteral(MAXFLOAT);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
 
@@ -805,13 +828,8 @@ std::shared_ptr<ProcessCallExpr> Parser::processCall(const std::shared_ptr<Expr>
     do
     {   
             std::shared_ptr<Expr> value = expression();
-            if (value->getType() == ExprType::LITERAL)
-            {
-                arguments.push_back(value);
-            }
-            
+            arguments.push_back(value);
             if (match(TokenType::RIGHT_PAREN)) break;
-           
             consume(TokenType::COMMA, "Expect ',' after arguments.");
             
     }while (!check(TokenType::RIGHT_PAREN) || !isAtEnd());
@@ -858,18 +876,12 @@ std::shared_ptr<ProcessStmt> Parser::processStmt()
         do
         {
             
-            if (match(TokenType::IDINT))
-            {
-                  Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                  std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createIntLiteral(INT32_MAX);
-                  std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
-                  parameter.push_back(arg);
-            } else 
-            if (match(TokenType::IDFLOAT))
+            
+            if (match(TokenType::IDNUMBER))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
                     
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createFloatLiteral(MAXFLOAT);
+                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createNumberLiteral(MAXFLOAT);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
 
@@ -942,7 +954,6 @@ std::shared_ptr<NativeFunctionExpr> Parser::defNativeCall(const std::shared_ptr<
             std::shared_ptr<Expr> value = expression();
             arguments.push_back(value);
             if (match(TokenType::RIGHT_PAREN)) break;
-           
             consume(TokenType::COMMA, "Expect ',' after arguments.");
             
     }while (!check(TokenType::RIGHT_PAREN) || !isAtEnd());
@@ -969,13 +980,10 @@ std::shared_ptr<EmptyStmt> Parser::emptyDeclaration()
 std::shared_ptr<Stmt> Parser::declaration()
 {
 
-    if (match(TokenType::IDINT))
+   
+    if (match(TokenType::IDNUMBER))
     {
-        return varDeclaration(LiteralType::INT);
-    } else 
-    if (match(TokenType::IDFLOAT))
-    {
-        return varDeclaration(LiteralType::FLOAT);
+        return varDeclaration(LiteralType::NUMBER);
     } else 
     if (match(TokenType::IDSTRING))
     {
@@ -1036,26 +1044,18 @@ std::shared_ptr<VarStmt> Parser::varDeclaration(LiteralType type)
         } else 
         { 
 
-            if (type == LiteralType::INT)
+            if (type == LiteralType::NUMBER)
             {
-                initializer = LiteralPool::Instance().createIntLiteral(INT32_MAX);
-            } else 
-            if (type == LiteralType::FLOAT)
-            {
-                initializer = LiteralPool::Instance().createFloatLiteral(MAXFLOAT);
+                initializer = LiteralPool::Instance().createNumberLiteral(INT32_MAX);
             } else 
             if (type == LiteralType::STRING)
             {
-                initializer =LiteralPool::Instance().createStringLiteral("null");
+                initializer =LiteralPool::Instance().createStringLiteral("NULL");
             } else 
             if (type == LiteralType::BOOLEAN)
             {
                 initializer =LiteralPool::Instance().createBoolLiteral(false);
             } else 
-            if (type == LiteralType::POINTER)
-            {
-                initializer = LiteralPool::Instance().createPointerLiteral(nullptr);
-            } else
             {
                 Warning(name,"Type not supported for variable assign");
             }

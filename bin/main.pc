@@ -1,18 +1,21 @@
     program main;
-        process nave()
+        process nave(number _x,number _y)
         begin
-                x=mouse_x();
-                y=mouse_y();
-                float life =0.0;
-                loop
+                x=_x;
+                y=_y;
+                number mx =0.5;
+                number life =0;
+                loop;
                     begin 
-                        x = x + 5;
-                            if (x>=800.0)
+                        
+                        x-=1;
+
+                            if (x>=800)
                             begin 
-                                x=0.0;
+                                x=0;
                             end
-                        life = life + 1.0;
-                        if (life>=2000.0)
+                        life = life + 1;
+                        if (life>=200)
                         begin
                             break;
                         end
@@ -20,11 +23,12 @@
         end
         process main()
         begin 
+            
             loop 
             begin 
                if (mouse_down(0))
                begin
-                    nave();
+                    nave(mouse_x(),mouse_y());
                end
             end
         end

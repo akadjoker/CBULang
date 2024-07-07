@@ -34,13 +34,9 @@ LiteralPtr native_writeln(ExecutionContext* ctx, int argc, LiteralList* argv)
             {
                 std::cout << argv[i]->getString();
             }
-            else if (ctx->isInt(argv[i]))
+            else if (ctx->isNumber(argv[i]))
             {
-                std::cout << argv[i]->getInt();
-            }
-            else if (ctx->isFloat(argv[i]))
-            {
-                std::cout << argv[i]->getFloat();
+                std::cout << argv[i]->getNumber();
             } else 
             {
                 std::cout << argv[i]->toString();
@@ -85,11 +81,6 @@ LiteralPtr native_mouse_y(ExecutionContext* ctx, int argc, LiteralList* argv)
 LiteralPtr native_circle(ExecutionContext* ctx, int argc, LiteralList* argv) 
 {
 
-    if (!argv)    
-    {
-        return ctx->asBool(false);
-    }
-
     if (argc != 4)
     {
         ctx->Error("Usage: circle(x, y, radius, fill)"+std::to_string(argc));   
@@ -104,12 +95,11 @@ LiteralPtr native_circle(ExecutionContext* ctx, int argc, LiteralList* argv)
 
     if (fill)
     {
-        std::cout<<"x:"<<x<<" y:"<<y<<" radius:"<<radius<<" fill"<<std::endl;
-       // DrawCircle(x, y, radius, BLUE);
+        DrawCircle(x, y, radius, BLUE);
     } else 
     {
-        std::cout<<"x:"<<x<<" y:"<<y<<" radius:"<<radius<<" line"<<std::endl;
-       // DrawCircle(x, y, radius, RED);
+       
+       DrawCircle(x, y, radius, RED);
     }
 
     
@@ -132,10 +122,8 @@ static const NativeFuncDef native_funcs[] = {
     {
 
          std::string code = readFile("main.pc");
-         auto& pool = LiteralPool::Instance();
-         pool.setMaxPoolSize(100); // Define o tamanho máximo do pool para 10 objetos
-
-
+         LiteralPool::Instance();
+         
         Lexer lexer = Lexer(code);
         std::vector<Token> tokens = lexer.scanTokens();
          for (Token token : tokens)
@@ -205,7 +193,7 @@ catch (const std::runtime_error& e)
         Log(2,"Runtime: %s", text.c_str());
 }
 
- //CloseWindow(); 
+ CloseWindow(); 
             
 
 return 0;

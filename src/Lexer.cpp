@@ -48,8 +48,7 @@ Lexer::Lexer(const std::string &input)
 
     
     keywords["nil"] = TokenType::NIL;
-    keywords["int"] = TokenType::IDINT;
-    keywords["float"] = TokenType::IDFLOAT;
+    keywords["number"] = TokenType::IDNUMBER;
     keywords["string"] = TokenType::IDSTRING;
     keywords["bool"] = TokenType::IDBOOL;
     keywords["false"] = TokenType::FALSE;
@@ -110,12 +109,23 @@ void Lexer::scanToken()
       case '.': addToken(TokenType::DOT); break;
       case '-': 
       {
-        addToken(match('-') ? TokenType::DEC : TokenType::MINUS);
+        if (match('-')) 
+          addToken(TokenType::DEC);
+        else if (match('='))
+          addToken(TokenType::MINUS_EQUAL);  
+        else 
+          addToken(TokenType::MINUS);
         break;
       }
       case '+': 
       {
-        addToken(match('+') ? TokenType::INC : TokenType::PLUS);
+        if (match('+')) 
+          addToken(TokenType::INC);
+        else if (match('='))
+          addToken(TokenType::PLUS_EQUAL);  
+        else 
+          addToken(TokenType::PLUS);
+        
         break;
       }
       case ';': addToken(TokenType::SEMICOLON); break;
@@ -125,7 +135,15 @@ void Lexer::scanToken()
 
       case '%': addToken(TokenType::MOD); break;
 
-      case '*': addToken(TokenType::STAR); break; // [slash]
+      case '*': 
+      {
+        if (match('='))
+          addToken(TokenType::STAR_EQUAL);  
+        else 
+          addToken(TokenType::STAR);
+        break;
+      }
+  
 
       case '!':
         addToken(match('=') ? TokenType::BANG_EQUAL : TokenType::BANG);
@@ -142,6 +160,10 @@ void Lexer::scanToken()
 
 
       case '/':
+        if (match('='))
+        {
+          addToken(TokenType::SLASH_EQUAL);
+        } else 
         if (match('/')) 
         {
           while (peek() != '\n' && !isAtEnd()) advance();
@@ -470,13 +492,11 @@ void Lexer::string()
 void Lexer::number()
 {
     std::string text = "";
-    bool isFloat = false;
 
     while (isDigit(peek())) advance();
 
     if (peek() == '.' && isDigit(peekNext()))
     {
-        isFloat = true;
         advance();
         while (isDigit(peek())) advance();
     }
@@ -485,7 +505,7 @@ void Lexer::number()
    
 
     text = input.substr(start, current - start);
-    addToken(isFloat ? TokenType::FLOAT : TokenType::INT, text);
+    addToken(TokenType::NUMBER, text);
  
 }
 

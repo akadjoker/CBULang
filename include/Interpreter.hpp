@@ -58,14 +58,14 @@ public:
     bool isEqual(const LiteralPtr &lhs, const LiteralPtr &rhs);
 
     bool isString(const LiteralList &value);
-    bool isInt(const LiteralList &value);
-    bool isFloat(const LiteralList &value);
+    bool isNumber(const LiteralList &value);
     bool isBool(const LiteralList &value);
     
+    LiteralPtr asNumber(double value);
+    LiteralPtr asFloat(float value);
     LiteralPtr asInt(int value);
-    LiteralPtr asFloat(double value);
     LiteralPtr asString(const std::string &value);
-    LiteralPtr asString(const char &value);
+    LiteralPtr asString(const char *value);
     LiteralPtr asBool(bool value);
     LiteralPtr asPointer(void *value);
     void Error(const std::string &message);
@@ -155,8 +155,8 @@ public:
         return instance;
     }
 
-    std::shared_ptr<Literal> acquireInt(int value);
-    std::shared_ptr<Literal> acquireFloat(double value);
+    
+    std::shared_ptr<Literal> acquireNumber(double value);
     std::shared_ptr<Literal> acquireBool(bool value);
     std::shared_ptr<Literal> acquireString(const std::string &value);
     std::shared_ptr<Literal> acquirePointer(void *value);
@@ -167,8 +167,7 @@ public:
 
     void clear();
 
-    static std::shared_ptr<LiteralExpr> createIntLiteral(int value);
-    static std::shared_ptr<LiteralExpr> createFloatLiteral(double value);
+    static std::shared_ptr<LiteralExpr> createNumberLiteral(double value);
     static std::shared_ptr<LiteralExpr> createStringLiteral(const std::string &value);
     static std::shared_ptr<LiteralExpr> createBoolLiteral(bool value);
     static std::shared_ptr<LiteralExpr> createPointerLiteral(void *value);
@@ -196,8 +195,8 @@ public:
 
     bool contains(const std::string &name);
 
-    bool addInt(const std::string &name, int value);
-    bool addFloat(const std::string &name, double value);
+    
+    bool addNumber(const std::string &name, double value);
     bool addBool(const std::string &name, bool value);
     bool addString(const std::string &name, const std::string &value);
 
@@ -314,10 +313,10 @@ private:
     std::vector<std::unique_ptr<Process>> remove_processes;
 
 
-    float time_elapsed();
+    double time_elapsed();
 
-    std::shared_ptr<LiteralExpr> createIntLiteral(int value);
-    std::shared_ptr<LiteralExpr> createFloatLiteral(double value);
+    
+    std::shared_ptr<LiteralExpr> createNumberLiteral(double value);
     std::shared_ptr<LiteralExpr> createStringLiteral(const std::string &value);
     std::shared_ptr<LiteralExpr> createBoolLiteral(bool value);
     std::shared_ptr<LiteralExpr> createPointerLiteral(void *value);

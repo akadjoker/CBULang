@@ -45,13 +45,9 @@ std::shared_ptr<Expr> Interpreter::visitGroupingExpr(GroupingExpr *expr)
 std::shared_ptr<Expr> Interpreter::visitLiteralExpr(LiteralExpr *expr)
 {
 
-        if (expr->value->getType() == LiteralType::INT)
+        if (expr->value->getType() == LiteralType::NUMBER)
         {
-            return createIntLiteral(expr->value->getInt());
-        }
-        else if (expr->value->getType() == LiteralType::FLOAT)
-        {
-            return createFloatLiteral(expr->value->getFloat());
+            return createNumberLiteral(expr->value->getNumber());
         }
         else if (expr->value->getType() == LiteralType::STRING)
         {
@@ -86,33 +82,20 @@ std::shared_ptr<Expr> Interpreter::visitBinaryExpr(BinaryExpr *expr)
 
         if (expr->op.type == TokenType::PLUS) // + addition
         {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
+           
+            if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
             {
-                return createIntLiteral(leftLiteral->value->getInt() + rightLiteral->value->getInt());
+                return createNumberLiteral(leftLiteral->value->getNumber() + rightLiteral->value->getNumber());
             }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(leftLiteral->value->getFloat() + rightLiteral->value->getFloat());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createFloatLiteral(leftLiteral->value->getFloat() + rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(leftLiteral->value->getInt() + rightLiteral->value->getFloat());
-            } else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::STRING)
+             else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::STRING)
             {
                 std::string value = std::string(leftLiteral->value->getString());
                 value += std::string(rightLiteral->value->getString());
                 return createStringLiteral(value);
-            } else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::INT)
+            } 
+             else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::NUMBER)
             {
-                std::string value = leftLiteral->value->getString() + std::to_string(rightLiteral->value->getInt());
-                return createStringLiteral(value);
-            } else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                std::string value = leftLiteral->value->getString() + std::to_string(rightLiteral->value->getFloat());
+                std::string value = leftLiteral->value->getString() + std::to_string(rightLiteral->value->getNumber());
                 return createStringLiteral(value);
             } else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::BOOLEAN)
             {
@@ -121,132 +104,73 @@ std::shared_ptr<Expr> Interpreter::visitBinaryExpr(BinaryExpr *expr)
             } else 
             {
                                 
-                 Error(expr->op, "Unsupported operation (" + leftVal->toString() + " + " + rightVal->toString() + ")");
+                  Error(expr->op, "Unsupported operation (" + leftVal->toString() + " add " + rightVal->toString() + ")");
                   return createBoolLiteral(false);
                 
             }
         }
         else if (expr->op.type == TokenType::MINUS) // - subtraction
         {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
+            if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
             {
-                return createIntLiteral(leftLiteral->value->getInt() - rightLiteral->value->getInt());
+                return createNumberLiteral(leftLiteral->value->getNumber() - rightLiteral->value->getNumber());
             }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(leftLiteral->value->getFloat() - rightLiteral->value->getFloat());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createFloatLiteral(leftLiteral->value->getFloat() - rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(leftLiteral->value->getInt() - rightLiteral->value->getFloat());
-            } else 
+            else 
             {
                                 
-                  Error(expr->op, "Unsupported operation (" + leftVal->toString() + " - " + rightVal->toString() + ")");
+                  Error(expr->op, "Unsupported operation (" + leftVal->toString() + " sub " + rightVal->toString() + ")");
                   return createBoolLiteral(false);
                 
             }
         }
         else if (expr->op.type == TokenType::STAR)// * multiplication
         {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
+             if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
             {
-                return createIntLiteral(leftLiteral->value->getInt() * rightLiteral->value->getInt());
+                return createNumberLiteral(leftLiteral->value->getNumber() * rightLiteral->value->getNumber());
             }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(leftLiteral->value->getFloat() * rightLiteral->value->getFloat());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createFloatLiteral(leftLiteral->value->getFloat() * rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(leftLiteral->value->getInt() * rightLiteral->value->getFloat());
-            } else 
+            else 
             {
                                 
-                  Error(expr->op, "Unsupported operation (" + leftVal->toString() + " * " + rightVal->toString() + ")");
+                  Error(expr->op, "Unsupported operation (" + leftVal->toString() + " mult " + rightVal->toString() + ")");
                   return createBoolLiteral(false);
                 
             }
         }
         else if (expr->op.type == TokenType::SLASH)// / division
         {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
+            if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
             {
-                if (rightLiteral->value->getInt() == 0)
+                if (rightLiteral->value->getNumber() == 0)
                 {
                     Error(expr->op, "Division by zero");
-                    return createIntLiteral(0);
+                    return createNumberLiteral(0);
                 }
-                return createIntLiteral(leftLiteral->value->getInt() / rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
+                return createNumberLiteral(leftLiteral->value->getNumber() / rightLiteral->value->getNumber());
+            }else
             {
-                if (rightLiteral->value->getFloat() == 0)
-                {
-                    Error(expr->op, "Division by zero");
-                    return createFloatLiteral(0);
-                }
-                return createFloatLiteral(leftLiteral->value->getFloat() / rightLiteral->value->getFloat());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                if (rightLiteral->value->getInt() == 0)
-                {
-                    Error(expr->op, "Division by zero");
-                    return createFloatLiteral(0);
-                }
-                return createFloatLiteral(leftLiteral->value->getFloat() / rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                if (rightLiteral->value->getFloat() == 0)
-                {
-                    Error(expr->op, "Division by zero");
-                    return createFloatLiteral(0);
-                }
-                return createFloatLiteral(leftLiteral->value->getInt() / rightLiteral->value->getFloat());
+                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " div " + rightVal->toString() + ")");
+                return createBoolLiteral(false);
             }
         }else if (expr->op.type == TokenType::MOD)
         {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
+             if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
             {
-                return createIntLiteral(leftLiteral->value->getInt() % rightLiteral->value->getInt());
-            } else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(fmod(leftLiteral->value->getFloat(), rightLiteral->value->getFloat()));
+                return createNumberLiteral(fmod(leftLiteral->value->getNumber(), rightLiteral->value->getNumber()));
             }else 
             {
-                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " % " + rightVal->toString() + ")");
+                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " mod " + rightVal->toString() + ")");
                 return createBoolLiteral(false);
             }
         }else if (expr->op.type == TokenType::POWER)
         {
-          if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
+            if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
             {
-                return createIntLiteral(static_cast<int>(std::pow(leftLiteral->value->getInt(), rightLiteral->value->getInt())));
+                return createNumberLiteral(std::pow(leftLiteral->value->getNumber(), rightLiteral->value->getNumber()));
             }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
+            else
             {
-                return createFloatLiteral(std::pow(leftLiteral->value->getFloat(), rightLiteral->value->getFloat()));
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createFloatLiteral(std::pow(leftLiteral->value->getFloat(), rightLiteral->value->getInt()));
-            }
-            else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createFloatLiteral(std::pow(leftLiteral->value->getInt(), rightLiteral->value->getFloat()));
-            }else
-            {
-                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " ^ " + rightVal->toString() + ")");
+                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " pow " + rightVal->toString() + ")");
                 return createBoolLiteral(false);
             }
         }else if (expr->op.type == TokenType::EQUAL_EQUAL)
@@ -261,18 +185,14 @@ std::shared_ptr<Expr> Interpreter::visitBinaryExpr(BinaryExpr *expr)
             {
                 return createBoolLiteral(leftLiteral->value->getString() == rightLiteral->value->getString());
             }
-            else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
+            else if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
             {
-                return createBoolLiteral(leftLiteral->value->getInt() == rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createBoolLiteral(leftLiteral->value->getFloat() == rightLiteral->value->getFloat());
+                return createBoolLiteral(leftLiteral->value->getNumber() == rightLiteral->value->getNumber());
             }
             else
             {
                                 
-                  Error(expr->op, "Unsupported operation (" + leftVal->toString() + " == " + rightVal->toString() + ")");
+                  Error(expr->op, "Unsupported operation (" + leftVal->toString() + " equal " + rightVal->toString() + ")");
                   return createBoolLiteral(false);
                 
             }
@@ -288,101 +208,116 @@ std::shared_ptr<Expr> Interpreter::visitBinaryExpr(BinaryExpr *expr)
             } else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::STRING)
             {
                 return createBoolLiteral(leftLiteral->value->getString() != rightLiteral->value->getString());
-            } else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
+            } if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
             {
-                return createBoolLiteral(leftLiteral->value->getInt() != rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createBoolLiteral(leftLiteral->value->getFloat() != rightLiteral->value->getFloat());
+                return createBoolLiteral(leftLiteral->value->getNumber() != rightLiteral->value->getNumber());
             }
             else
             {
-                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " != " + rightVal->toString() + ")");
+                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " not equal " + rightVal->toString() + ")");
                 return createBoolLiteral(false);
             }
         }else if (expr->op.type == TokenType::LESS)// <
         {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
+            if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
             {
-                return createBoolLiteral(leftLiteral->value->getInt() < rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
+                return createBoolLiteral(leftLiteral->value->getNumber() < rightLiteral->value->getNumber());
+            }  else 
+            if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::STRING)
             {
-                return createBoolLiteral(leftLiteral->value->getFloat() < rightLiteral->value->getFloat());
-            } else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createBoolLiteral(leftLiteral->value->getInt() < rightLiteral->value->getFloat());
-            } else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createBoolLiteral(leftLiteral->value->getFloat() < rightLiteral->value->getInt());
+                return createBoolLiteral(leftLiteral->value->getString() < rightLiteral->value->getString());
             }
             else
             {
-               Error(expr->op, "Unsupported operation (" + leftVal->toString() + " < " + rightVal->toString() + ")");
+               Error(expr->op, "Unsupported operation (" + leftVal->toString() + " less " + rightVal->toString() + ")");
                return createBoolLiteral(false);
             }
          }else if (expr->op.type == TokenType::LESS_EQUAL)// <=
         {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
+            if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
             {
-                return createBoolLiteral(leftLiteral->value->getInt() <= rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
+                return createBoolLiteral(leftLiteral->value->getNumber() <= rightLiteral->value->getNumber());
+            } else 
+            if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::STRING)
             {
-                return createBoolLiteral(leftLiteral->value->getFloat() <= rightLiteral->value->getFloat());
-            } else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createBoolLiteral(leftLiteral->value->getInt() <= rightLiteral->value->getFloat());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createBoolLiteral(leftLiteral->value->getFloat() <= rightLiteral->value->getInt());
+                return createBoolLiteral(leftLiteral->value->getString() <= rightLiteral->value->getString());
             }
             else
             {
-               Error(expr->op, "Unsupported operation (" + leftVal->toString() + " <= " + rightVal->toString() + ")");
+               Error(expr->op, "Unsupported operation (" + leftVal->toString() + " less equal " + rightVal->toString() + ")");
                 return createBoolLiteral(false);
             }
          }else if (expr->op.type == TokenType::GREATER)// >
         {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
+             if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
             {
-                return createBoolLiteral(leftLiteral->value->getInt() > rightLiteral->value->getInt());
-            }
-            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
+                return createBoolLiteral(leftLiteral->value->getNumber() > rightLiteral->value->getNumber());
+            } else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::STRING)
             {
-                return createBoolLiteral(leftLiteral->value->getFloat() > rightLiteral->value->getFloat());
-            } else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createBoolLiteral(leftLiteral->value->getInt() > rightLiteral->value->getFloat());
-            } else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createBoolLiteral(leftLiteral->value->getFloat() > rightLiteral->value->getInt());
+                return createBoolLiteral(leftLiteral->value->getString() > rightLiteral->value->getString());
             }
             else
             {
-                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " > " + rightVal->toString() + ")");
+                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " greater " + rightVal->toString() + ")");
                 return createBoolLiteral(false);
             }
          }else if (expr->op.type == TokenType::GREATER_EQUAL)// >=
         {
-            if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::INT)
+            if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
             {
-                return createBoolLiteral(leftLiteral->value->getInt() >= rightLiteral->value->getInt());
-            }else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
+                return createBoolLiteral(leftLiteral->value->getNumber() >= rightLiteral->value->getNumber());
+            } else if (leftLiteral->value->getType() == LiteralType::STRING && rightLiteral->value->getType() == LiteralType::STRING)
             {
-                return createBoolLiteral(leftLiteral->value->getFloat() >= rightLiteral->value->getFloat());
-            } else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
-            {
-                return createBoolLiteral(leftLiteral->value->getInt() >= rightLiteral->value->getFloat());
-            } else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
-            {
-                return createBoolLiteral(leftLiteral->value->getFloat() >= rightLiteral->value->getInt());
-            }
+                return createBoolLiteral(leftLiteral->value->getString() >= rightLiteral->value->getString());
+            } 
             else
             {
-               Error(expr->op, "Unsupported operation (" + leftVal->toString() + " >= " + rightVal->toString() + ")");
+               Error(expr->op, "Unsupported operation (" + leftVal->toString() + " greater equal " + rightVal->toString() + ")");
+                return createBoolLiteral(false);
+            }
+        } else if (expr->op.type == TokenType::PLUS_EQUAL)// +=
+        {
+            if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
+            {
+                return createNumberLiteral(leftLiteral->value->getNumber() + rightLiteral->value->getNumber());
+            } else
+            {
+                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " plus equal " + rightVal->toString() + ")");
+                return createBoolLiteral(false);
+            }
+        } else if (expr->op.type == TokenType::MINUS_EQUAL)// -=
+        {
+            if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
+            {
+                return createNumberLiteral(leftLiteral->value->getNumber() - rightLiteral->value->getNumber());
+            } else
+            {
+                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " minus equal " + rightVal->toString() + ")");
+                return createBoolLiteral(false);
+            }
+        } else if (expr->op.type == TokenType::STAR_EQUAL)// *=
+        {
+            if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
+            {
+                return createNumberLiteral(leftLiteral->value->getNumber() * rightLiteral->value->getNumber());
+            } else
+            {
+                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " star equal " + rightVal->toString() + ")");
+                return createBoolLiteral(false);
+            }
+        } else if (expr->op.type == TokenType::SLASH_EQUAL)// /=
+        {
+            if (leftLiteral->value->getType() == LiteralType::NUMBER && rightLiteral->value->getType() == LiteralType::NUMBER)
+            {
+                if (rightLiteral->value->getNumber() == 0)
+                {
+                    Error(expr->op, "Division by zero");
+                    return createNumberLiteral(leftLiteral->value->getNumber());
+                }
+                return createNumberLiteral(leftLiteral->value->getNumber() / rightLiteral->value->getNumber());
+            } else
+            {
+                Error(expr->op, "Unsupported operation (" + leftVal->toString() + " slash equal " + rightVal->toString() + ")");
                 return createBoolLiteral(false);
             }
         }
@@ -414,35 +349,36 @@ std::shared_ptr<Expr> Interpreter::visitUnaryExpr(UnaryExpr *expr)
         if  (expr->op.type==TokenType::MINUS)
         {
             
-                if (literal->value->getType() == LiteralType::INT)
+                if (literal->value->getType() == LiteralType::NUMBER)
                 {
-                    return createIntLiteral(-literal->value->getInt());
-                }
-                else if (literal->value->getType() == LiteralType::FLOAT)
-                {
-                    return createFloatLiteral(-literal->value->getFloat());
-                }
-          
+                    return createNumberLiteral(-literal->value->getNumber());
+                } 
             
         } else if (expr->op.type==TokenType::BANG)
         {
             if (literal->value->getType() == LiteralType::BOOLEAN)
             {
                 return createBoolLiteral(!literal->value->getBool());
+            } else 
+            if (literal->value->getType() == LiteralType::NUMBER)
+            {
+                 bool value= (literal->value->getNumber() == 0.0) ? 1 : 0;
+                return createBoolLiteral(!value);
             }
         } else if (expr->op.type==TokenType::NOT)
         {
             if (literal->value->getType() == LiteralType::BOOLEAN)
             {
                 return createBoolLiteral(!literal->value->getBool());
+            } else 
+            if (literal->value->getType() == LiteralType::NUMBER)
+            {
+                bool value= (literal->value->getNumber() == 0.0) ? 1 : 0;
+                return createBoolLiteral(!value);
             }
         } else if (expr->op.type==TokenType::INC)
         {
-                // if (expr->right->getType() == ExprType::VARIABLE)
-                // {
-                //     Error(expr->op, "Only variables can be incremented"+expr->right->toString());
-                //     return std::shared_ptr<Expr>(expr, [](Expr*){});  
-                // }
+               
 
                 VariableExpr *variable = static_cast<VariableExpr*>(expr->right.get());
                 
@@ -459,36 +395,36 @@ std::shared_ptr<Expr> Interpreter::visitUnaryExpr(UnaryExpr *expr)
 
                 Literal *realLiteral = static_cast<Literal*>(oldVariable.get());
 
-                if (realLiteral->getType() == LiteralType::INT)
+                if (realLiteral->getType() == LiteralType::NUMBER)
                 {
                     if (isPrefix)
                     {
-                        int value = realLiteral->getInt();
+                        double value = realLiteral->getNumber();
                         value++;
-                        realLiteral->setInt(value);
-                        return createIntLiteral(value);
+                        realLiteral->setNumber(value);
+                        return createNumberLiteral(value);
                     }
                     else
                     {
-                        int value = realLiteral->getInt();
-                        realLiteral->setInt(value + 1);
-                        return createIntLiteral(value);
+                        double value = realLiteral->getNumber();
+                        realLiteral->setNumber(value + 1.0);
+                        return createNumberLiteral(value);
                     }
                 }
-                else if (realLiteral->getType() == LiteralType::FLOAT)
+                else if (realLiteral->getType() == LiteralType::NUMBER)
                 {
                      if (isPrefix)
                      {
-                        double value = realLiteral->getFloat();
+                        double value = realLiteral->getNumber();
                         value++;
-                        realLiteral->setFloat(value);
-                        return createFloatLiteral(value);
+                        realLiteral->setNumber(value);
+                        return createNumberLiteral(value);
 
                      } else 
                      {
-                        double value = realLiteral->getFloat();
-                        realLiteral->setFloat(value + 1.0);
-                        return createFloatLiteral(value);
+                        double value = realLiteral->getNumber();
+                        realLiteral->setNumber(value + 1.0);
+                        return createNumberLiteral(value);
                      }
                     
                 }
@@ -513,34 +449,35 @@ std::shared_ptr<Expr> Interpreter::visitUnaryExpr(UnaryExpr *expr)
 
                 Literal *realLiteral = static_cast<Literal*>(oldVariable.get());
 
-                if (realLiteral->getType() == LiteralType::INT)
+                if (realLiteral->getType() == LiteralType::NUMBER)
                 {
                     if (isPrefix)
                     {
-                        int value = realLiteral->getInt();
+                        double value = realLiteral->getNumber();
                         value--;
-                        realLiteral->setInt(value);
-                        return createIntLiteral(value);
+                        realLiteral->setNumber(value);
+                        return createNumberLiteral(value);
 
                     } else 
                     {
-                        int value = realLiteral->getInt();
-                        realLiteral->setInt(value - 1);
-                        return createIntLiteral(value);
+                        double value = realLiteral->getNumber();
+                        realLiteral->setNumber(value - 1.0);
+                        return createNumberLiteral(value);
                     }
                 }
-                else if (realLiteral->getType() == LiteralType::FLOAT)
+                else if (realLiteral->getType() == LiteralType::NUMBER)
                 {
                     if (isPrefix)
                     {
-                        double value = realLiteral->getFloat();
+                        double value = realLiteral->getNumber();
                         value--;
-                        realLiteral->setFloat(value);
-                        return createFloatLiteral(value);
+                        realLiteral->setNumber(value);
+                        return createNumberLiteral(value);
                     } else
                     {
-                        double value = realLiteral->getFloat();
-                        realLiteral->setFloat(value - 1.0);
+                        double value = realLiteral->getNumber();
+                        realLiteral->setNumber(value - 1.0);
+                        return createNumberLiteral(value);
                     }
                 }
 

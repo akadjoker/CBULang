@@ -32,16 +32,12 @@ void Literal::clear()
 bool Literal::isTrue() const
 {
     
-    if (type == INT)
-        return value.intValue != 0;
-    else if (type == FLOAT)
-        return value.floatValue != 0.0f;
+    if (type == NUMBER)
+        return value.numberValue != 0.0;
     else if (type == BOOLEAN)
         return value.boolValue;
     else if (type == STRING)
         return value.stringValue != nullptr;
-    else if (type == POINTER)
-        return value.pointerValue != nullptr;
     
     return false;
 }
@@ -53,36 +49,22 @@ bool Literal::isEqual(const Literal *other) const
         return false;
     if (type == LiteralType::STRING)
         return value.stringValue == other->value.stringValue;
-    else if (type == LiteralType::FLOAT)
-        return value.floatValue == other->value.floatValue;
+    else if (type == LiteralType::NUMBER)
+        return value.numberValue == other->value.numberValue;
     else if (type == LiteralType::BOOLEAN)
         return value.boolValue == other->value.boolValue;
     return false;
 }
 
-bool Literal::isInt() const
-{
-    return type == LiteralType::INT;
-}
 
-bool Literal::isFloat() const
+bool Literal::isNumber() const
 {
-    return type == LiteralType::FLOAT;
+    return type == LiteralType::NUMBER;
 }
 
 bool Literal::isBool() const
 {
-    return type == LiteralType::BOOLEAN;
-}
-
-bool Literal::isString() const
-{
     return type == LiteralType::STRING;
-}
-
-bool Literal::isPointer() const
-{
-    return type == LiteralType::POINTER;
 }
 
 Literal::Literal(const Literal &other) : type(other.type)
@@ -106,38 +88,31 @@ void Literal::copyValue(const Literal &other)
 
  //  Log(0, "Copy Literal: %s", other.toString().c_str());
 
-switch (other.type)
-{
-case LiteralType::INT:
-    value.intValue = other.value.intValue;
-    break;
-case LiteralType::BOOLEAN:
-    value.boolValue = other.value.boolValue;
-    break;
-case LiteralType::FLOAT:
-    value.floatValue = other.value.floatValue;
-    break;
-case LiteralType::STRING:
+    switch (other.type)
     {
-        if (value.stringValue != nullptr && other.value.stringValue != nullptr)
+    case LiteralType::BOOLEAN:
+        value.boolValue = other.value.boolValue;
+        break;
+    case LiteralType::NUMBER:
+        value.numberValue = other.value.numberValue;
+        break;
+    case LiteralType::STRING:
         {
-            std::free(value.stringValue);
-            value.stringValue = strdup(other.value.stringValue);
-        } else 
-        {
+            if (value.stringValue != nullptr )
+            {
+                std::free(value.stringValue);
+            }
             if (other.value.stringValue != nullptr)
-                value.stringValue = strdup(other.value.stringValue);
+                    value.stringValue = strdup(other.value.stringValue);
             else
-                value.stringValue = strdup("NULL");
+                    value.stringValue = strdup("NULL");
+            
         }
-    }
-    break;
-case LiteralType::POINTER:
-    value.pointerValue = other.value.pointerValue;
-    break;
+        break;
+        }
+}
 
-}
-}
+
 
 std::string Literal::toString() const
 {
@@ -145,51 +120,36 @@ std::string Literal::toString() const
 
     switch (type)
     {
-    case STRING:
-        if (value.stringValue == nullptr)
-            return "String: null";
-        return "String: " + std::string(value.stringValue);
-    case INT:
-        return "Int: " + std::to_string(value.intValue);
-    case FLOAT:
-        return "Float: " + std::to_string(value.floatValue);
-    case BOOLEAN:
-    {
-        if (value.boolValue)
-            return "Boolean: true";
-        else
-            return "Boolean: false";
-    }
-    case POINTER:
-    {
-        if (value.pointerValue == nullptr)
-            return "Pointer: nil";
-        else
+        case STRING:
         {
-            int ref = *(int *)value.pointerValue;
-            return "Pointer" + std::to_string(ref);
+            if (value.stringValue == nullptr)
+                return "String: null";
+            return "String: " + std::string(value.stringValue);
         }
-    }
+        case NUMBER:
+            return "number: " + std::to_string(value.numberValue);
+        case BOOLEAN:
+        {
+            if (value.boolValue)
+                return "Boolean: true";
+
+            return "Boolean: false";
+        }
     }
     return "Unknown";
 }
 
 Literal::Literal()
 {
-    type = INT;
-    value.intValue = 0;
+    type = NUMBER;
+    value.numberValue = 0.0;
 }
 
-Literal::Literal(int value)
-{
-    type = INT;
-    this->value.intValue = value;
-}
 
 Literal::Literal(double value)
 {
-    type = FLOAT;
-    this->value.floatValue = value;
+    type = NUMBER;
+    this->value.numberValue = value;
 }
 
 Literal::Literal(bool value)
@@ -200,22 +160,16 @@ Literal::Literal(bool value)
 
 Literal::Literal(const char *stringValue)
 {
+
     type = STRING;
     if (stringValue == nullptr)
     {
-         
         value.stringValue = strdup("NULL");
         return;
     }
     
     value.stringValue = strdup(stringValue);
     
-}
-
-Literal::Literal(void *pointerValue)
-{
-    type = POINTER;
-    this->value.pointerValue = pointerValue;
 }
 
 
@@ -230,39 +184,28 @@ char *Literal::getString() const
     return value.stringValue;
 }
 
-int Literal::getInt() const
-{
-    
-    return value.intValue;
-}
 
-double Literal::getFloat() const
+double Literal::getNumber() const
 {
    
-    return value.floatValue;
+    return value.numberValue;
 }
 
 bool Literal::getBool() const
 {
-   
     return value.boolValue;
 }
 
-void *Literal::getPointer() const
+int Literal::getInt() const
 {
-    if (type != POINTER)
-    {
-        std::cout << "Invalid pointer literal type" << std::endl;
-        return nullptr;
-    }
-    return value.pointerValue;
+    int result = (int)value.numberValue;
+    return result;
 }
 
-void Literal::setPointer(void *value)
+float Literal::geFloat() const
 {
-  
-    type = POINTER;
-    this->value.pointerValue = value;
+    float result = (float)value.numberValue;
+    return result;
 }
 
 void Literal::setString(const char *stringValue)
@@ -276,25 +219,10 @@ void Literal::setString(const char *stringValue)
     value.stringValue = strdup(stringValue);
 }
 
-void Literal::setInt(int value)
+void Literal::setNumber(double value)
 {
-
-    type = INT;
-    this->value.intValue = value;
-}
-
-void Literal::setFloat(double value)
-{
-
-    type = FLOAT;
-    this->value.floatValue = value;
-}
-
-void Literal::setBool(bool value)
-{
-
-    type = BOOLEAN;
-    this->value.boolValue = value;
+    type = NUMBER;
+    this->value.numberValue = value;
 }
 
 bool Literal::copyFrom(const Literal *other)
@@ -316,9 +244,7 @@ List::List(LiteralType type)
 
 void List::add(const LiteralPtr &element)
 {
-    if (element == nullptr )
-        return;
-    
+    if (element == nullptr )        return;
     elements.push_back(element);
 }
 

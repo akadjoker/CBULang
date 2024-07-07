@@ -15,10 +15,10 @@ Process::Process(Interpreter *i,const std::string &name, unsigned int ID, BlockS
     this->ID = ID;
     this->m_running = true;
     environment = std::make_shared<Environment>(ID, global);
-    environment->addInt("id", ID);
-    environment->addInt("graph", 0);
-    environment->addFloat("x", X);
-    environment->addFloat("y", Y);
+    environment->addNumber("id", ID);
+    environment->addNumber("graph", 0);
+    environment->addNumber("x", X);
+    environment->addNumber("y", Y);
   //  std::cout<<"Create Process("<<ID<<")"<<std::endl;
 
     state = 0;
@@ -70,8 +70,8 @@ void Process::run()
             {
                 interpreter->execute(stmt);
             }
-            X = environment->get("x").get()->getFloat();
-            Y = environment->get("y").get()->getFloat();
+            X = environment->get("x").get()->getNumber();
+            Y = environment->get("y").get()->getNumber();
 
             state = 1;
             break;
@@ -129,8 +129,8 @@ void Process::run()
 
 void Process::render()
 {
-    X = environment->get("x").get()->getFloat();
-    Y = environment->get("y").get()->getFloat();
+    X = environment->get("x").get()->getNumber();
+    Y = environment->get("y").get()->getNumber();
 
     
 

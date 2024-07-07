@@ -35,11 +35,11 @@ Interpreter::~Interpreter()
     nativeFunctions.clear();
 }
 
-float Interpreter::time_elapsed()
+double Interpreter::time_elapsed()
 {
     auto now = std::chrono::high_resolution_clock::now();
     auto duration = now - start_time;
-    auto milliseconds = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(duration).count();
+    auto milliseconds = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(duration).count();
     return milliseconds;
 
     // auto now = std::chrono::system_clock::now();
@@ -59,10 +59,10 @@ static bool literalToBool(const Literal &literal)
     {
     case LiteralType::BOOLEAN:
         return literal.getBool();
-    case LiteralType::INT:
-        return literal.getInt() != 0;
-    case LiteralType::FLOAT:
-        return literal.getFloat() != 0.0;
+    case LiteralType::NUMBER:
+        return literal.getNumber() != 0.0;
+    case LiteralType::STRING:
+        return literal.getString() != nullptr;
     default:
         return false;
     }
@@ -76,7 +76,7 @@ std::shared_ptr<Expr> Interpreter::visitNowExpr(NowExpr *expr)
     auto duration = now.time_since_epoch();
     auto seconds = std::chrono::duration_cast<std::chrono::duration<double>>(duration).count();
 
-    return createFloatLiteral(static_cast<double>(seconds));
+    return createNumberLiteral(static_cast<double>(seconds));
 }
 
 std::shared_ptr<Expr> Interpreter::visitEmptyExpr(EmptyExpr *expr)
@@ -104,25 +104,7 @@ void Interpreter::build(std::shared_ptr<Stmt> program)
 {
        execute(program);
 
-    // Program *p = dynamic_cast<Program *>(program.get());
-
-    // auto task = [this, p]() mutable
-    // {
-    //     auto env = std::make_shared<Environment>(this->currentDepth, nullptr);
-    //     this->environment = env;
-    //     visitProgram(p);
-
-    //    // auto coroutine = coroutines.front();
-    //   ///  coroutine->finish();
-    // };
-    // addCoroutine(std::make_shared<Coroutine>(task));
-}
-
-// void Interpreter::execute(const std::shared_ptr<Stmt> &statement)
-// {
-//    std::cout<<"execute: "<<statement->toString()<<std::endl;
-//     statement->accept(this);
-// }
+  }
 
 void Interpreter::execute(const std::shared_ptr<Stmt> &stmt)
 {
@@ -203,13 +185,9 @@ void Interpreter::visitPrintStmt(PrintStmt *stmt)
     {
         LiteralExpr *literal = dynamic_cast<LiteralExpr *>(result.get());
 
-        if (literal->value->getType() == LiteralType::INT)
+        if (literal->value->getType() == LiteralType::NUMBER)
         {
-            Log(3, "%d", literal->value->getInt());
-        }
-        else if (literal->value->getType() == LiteralType::FLOAT)
-        {
-            Log(3, "%f", literal->value->getFloat());
+            Log(3, "%d", literal->value->getNumber());
         }
         else if (literal->value->getType() == LiteralType::BOOLEAN)
         {
@@ -225,10 +203,6 @@ void Interpreter::visitPrintStmt(PrintStmt *stmt)
             {
                 Log(3, "%s", literal->value->getString());
             }
-        }
-        else if (literal->value->getType() == LiteralType::POINTER)
-        {
-            Log(3, "%p", literal->value->getPointer());
         }
     }
     else
@@ -257,13 +231,9 @@ std::shared_ptr<Expr> Interpreter::visitVariableExpr(VariableExpr *expr)
 
     //   return std::make_shared<LiteralExpr>(std::make_shared<Literal>(value));
 
-    if (value->getType() == LiteralType::INT)
+    if (value->getType() == LiteralType::NUMBER)
     {
-        return createIntLiteral(value->getInt());
-    }
-    else if (value->getType() == LiteralType::FLOAT)
-    {
-        return createFloatLiteral(value->getFloat());
+        return createNumberLiteral(value->getNumber());
     }
     else if (value->getType() == LiteralType::BOOLEAN)
     {
@@ -273,10 +243,7 @@ std::shared_ptr<Expr> Interpreter::visitVariableExpr(VariableExpr *expr)
     {
         return createStringLiteral(value->getString());
     }
-    else if (value->getType() == LiteralType::POINTER)
-    {
-        return createPointerLiteral(value->getPointer());
-    }
+
 
     return std::make_shared<EmptyExpr>();
 }
@@ -304,15 +271,7 @@ std::shared_ptr<Expr> Interpreter::visitAssignExpr(AssignExpr *expr)
             return std::make_shared<EmptyExpr>();
         }
 
-        if (oldLiteral->getType() == LiteralType::INT && literal->value->getType() == LiteralType::FLOAT)
-        {
-            this->environment->assign(name, literal->value);
-        }
-        else if (oldLiteral->getType() == LiteralType::FLOAT && literal->value->getType() == LiteralType::INT)
-        {
-            this->environment->assign(name, literal->value);
-        }
-        else if (oldLiteral->getType() == literal->value->getType())
+         if (oldLiteral->getType() == literal->value->getType())
         {
             this->environment->assign(name, literal->value);
         }
@@ -322,7 +281,7 @@ std::shared_ptr<Expr> Interpreter::visitAssignExpr(AssignExpr *expr)
             return std::make_shared<EmptyExpr>();
         }
 
-        this->environment->assign(name, literal->value);
+      
     }
     else
     {
@@ -639,7 +598,7 @@ std::shared_ptr<Expr> Interpreter::visitProcessCallExpr(ProcessCallExpr *expr)
         if (!value)
         {
             Error("Invalid argument passed to process '" + name + "' at line: " + std::to_string(line));
-            return std::make_shared<EmptyExpr>();
+            break;
         };
         std::string argName = process->parameter[i].get()->name;
         if (value->getType() == ExprType::LITERAL)
@@ -688,7 +647,7 @@ std::shared_ptr<Expr> Interpreter::visitProcessCallExpr(ProcessCallExpr *expr)
     // }
     processes.push_back(std::move(newProcess));
     this->currentDepth--;
-    return createIntLiteral(id);
+    return createNumberLiteral(id);
 }
 
 void Interpreter::visitFunctionStmt(FunctionStmt *stmt)
@@ -1043,13 +1002,9 @@ bool Interpreter::Equal(LiteralExpr *a, LiteralExpr *b)
     {
         return (a->value->getString() == b->value->getString());
     }
-    else if (a->value->getType() == LiteralType::INT && b->value->getType() == LiteralType::INT)
+    else if (a->value->getType() == LiteralType::NUMBER && b->value->getType() == LiteralType::NUMBER)
     {
-        return (a->value->getInt() == b->value->getInt());
-    }
-    else if (a->value->getType() == LiteralType::FLOAT && b->value->getType() == LiteralType::FLOAT)
-    {
-        return (a->value->getFloat() == b->value->getFloat());
+        return (a->value->getNumber() == b->value->getNumber());
     }
     return false;
 }
@@ -1067,15 +1022,10 @@ void Interpreter::Info(const std::string &message)
     Log(0, text.c_str());
 }
 
-std::shared_ptr<LiteralExpr> Interpreter::createIntLiteral(int value)
-{
 
-    return LiteralPool::createIntLiteral(value);
-}
-
-std::shared_ptr<LiteralExpr> Interpreter::createFloatLiteral(double value)
+std::shared_ptr<LiteralExpr> Interpreter::createNumberLiteral(double value)
 {
-    return LiteralPool::createFloatLiteral(value);
+    return LiteralPool::createNumberLiteral(value);
 }
 
 std::shared_ptr<LiteralExpr> Interpreter::createStringLiteral(const std::string &value)
@@ -1089,10 +1039,6 @@ std::shared_ptr<LiteralExpr> Interpreter::createBoolLiteral(bool value)
     return LiteralPool::createBoolLiteral(value);
 }
 
-std::shared_ptr<LiteralExpr> Interpreter::createPointerLiteral(void *value)
-{
-    return LiteralPool::createPointerLiteral(value);
-}
 
 NativeFunction Interpreter::getNativeFunction(const std::string &name) const
 {
@@ -1196,15 +1142,11 @@ bool Environment::contains(const std::string &name)
     return false;
 }
 
-bool Environment::addInt(const std::string &name, int value)
-{
-    auto literal = LiteralPool::Instance().acquireInt(value);
-    return define(name, literal);
-}
 
-bool Environment::addFloat(const std::string &name, double value)
+
+bool Environment::addNumber(const std::string &name, double value)
 {
-    auto literal = LiteralPool::Instance().acquireFloat(value);
+    auto literal = LiteralPool::Instance().acquireNumber(value);
     return define(name, literal);
 }
 
@@ -1264,19 +1206,12 @@ void LiteralPool::init(size_t size)
     }
 }
 
-std::shared_ptr<Literal> LiteralPool::acquireInt(int value)
+
+std::shared_ptr<Literal> LiteralPool::acquireNumber(double value)
 {
 
     std::shared_ptr<Literal> literal = acquireLiteral();
-    literal->setInt(value);
-    return literal;
-}
-
-std::shared_ptr<Literal> LiteralPool::acquireFloat(double value)
-{
-
-    std::shared_ptr<Literal> literal = acquireLiteral();
-    literal->setFloat(value);
+    literal->setNumber(value);
     return literal;
 }
 
@@ -1296,14 +1231,6 @@ std::shared_ptr<Literal> LiteralPool::acquireString(const std::string &value)
     return literal;
 }
 
-std::shared_ptr<Literal> LiteralPool::acquirePointer(void *value)
-{
-
-    std::shared_ptr<Literal> literal = acquireLiteral();
-    literal->setPointer(value);
-    return literal;
-}
-
 void LiteralPool::release(std::shared_ptr<Literal> literal)
 {
     // literal->clear();
@@ -1317,18 +1244,12 @@ void LiteralPool::clear()
     pool.clear();
 }
 
-std::shared_ptr<LiteralExpr> LiteralPool::createIntLiteral(int value)
-{
-    if (USE_POOL)
-        return std::make_shared<LiteralExpr>(LiteralPool::Instance().acquireInt(value));
-    else
-        return std::make_shared<LiteralExpr>(std::move(std::make_shared<Literal>(value)));
-}
 
-std::shared_ptr<LiteralExpr> LiteralPool::createFloatLiteral(double value)
+
+std::shared_ptr<LiteralExpr> LiteralPool::createNumberLiteral(double value)
 {
     if (USE_POOL)
-        return std::make_shared<LiteralExpr>(LiteralPool::Instance().acquireFloat(value));
+        return std::make_shared<LiteralExpr>(LiteralPool::Instance().acquireNumber(value));
     else
         return std::make_shared<LiteralExpr>(std::move(std::make_shared<Literal>(value)));
 }
@@ -1349,25 +1270,25 @@ std::shared_ptr<LiteralExpr> LiteralPool::createBoolLiteral(bool value)
         return std::make_shared<LiteralExpr>(std::move(std::make_shared<Literal>(value)));
 }
 
-std::shared_ptr<LiteralExpr> LiteralPool::createPointerLiteral(void *value)
+
+LiteralPtr ExecutionContext::asNumber(double value)
 {
-    if (USE_POOL)
-        return std::make_shared<LiteralExpr>(LiteralPool::Instance().acquirePointer(value));
-    else
-        return std::make_shared<LiteralExpr>(std::move(std::make_shared<Literal>(value)));
+    return std::make_shared<Literal>(value);
 }
 
 LiteralPtr ExecutionContext::asInt(int value)
 {
-    return std::make_shared<Literal>(value);
+    double d = static_cast<double>(value);
+    return std::make_shared<Literal>(d);
 }
 
-LiteralPtr ExecutionContext::asFloat(double value)
+LiteralPtr ExecutionContext::asFloat(float value)
 {
-    return std::make_shared<Literal>(value);
+    double d = static_cast<double>(value);
+    return std::make_shared<Literal>(d);
 }
 
-LiteralPtr ExecutionContext::asString(const char &value)
+LiteralPtr ExecutionContext::asString(const char *value)
 {
     return std::make_shared<Literal>(value);
 }
@@ -1408,14 +1329,10 @@ bool ExecutionContext::isString(const LiteralList &value)
     return value->getType() == LiteralType::STRING;
 }
 
-bool ExecutionContext::isInt(const LiteralList &value)
-{
-    return value->getType() == LiteralType::INT;
-}
 
-bool ExecutionContext::isFloat(const LiteralList &value)
+bool ExecutionContext::isNumber(const LiteralList &value)
 {
-    return value->getType() == LiteralType::FLOAT;
+    return value->getType() == LiteralType::NUMBER;
 }
 
 bool ExecutionContext::isBool(const LiteralList &value)

@@ -35,12 +35,16 @@ enum class TokenType
     LESS_EQUAL,    // <
     INC,             // ++
     DEC,             // --
+    PLUS_EQUAL,      // +=
+    MINUS_EQUAL,     // -=
+    STAR_EQUAL,       // *=
+    SLASH_EQUAL,     // /=
+
 
     // Literals.
     IDENTIFIER,
     STRING,
-    INT,
-    FLOAT,
+    NUMBER,
     BOOL,
 
     // Keywords.
@@ -66,11 +70,9 @@ enum class TokenType
     TRUE,
 
     // LITERAIL ID
-    IDINT,
-    IDFLOAT,
+    IDNUMBER,
     IDBOOL,
     IDSTRING,
-    IDVOID,
 
     //DEFENITIONS ID
     IDFUNCTION,
@@ -129,12 +131,15 @@ inline std::string tknString(TokenType type)
         case TokenType::GREATER_EQUAL: return "GREATER_EQUAL";
         case TokenType::LESS:          return "LESS";
         case TokenType::LESS_EQUAL:    return "LESS_EQUAL";
-        case TokenType::INC:           return "INC";
-        case TokenType::DEC:           return "DEC";
+        case TokenType::INC:           return "++";
+        case TokenType::DEC:           return "--";
+        case TokenType::PLUS_EQUAL:    return "+=";
+        case TokenType::MINUS_EQUAL:   return "-=";
+        case TokenType::STAR_EQUAL:    return "*=";
+        case TokenType::SLASH_EQUAL:   return "/=";
         case TokenType::IDENTIFIER:    return "IDENTIFIER";
         case TokenType::STRING:        return "STRING";
-        case TokenType::INT:           return "INT";
-        case TokenType::FLOAT:         return "FLOAT";
+        case TokenType::NUMBER:         return "NUMBER";
         case TokenType::BOOL:          return "BOOL";
         case TokenType::OR:            return "OR";
         case TokenType::XOR:           return "XOR";
@@ -152,11 +157,9 @@ inline std::string tknString(TokenType type)
         case TokenType::NIL:           return "NIL";
         case TokenType::FALSE:         return "FALSE";
         case TokenType::TRUE:          return "TRUE";
-        case TokenType::IDINT:         return "ID_INT";
-        case TokenType::IDFLOAT:       return "ID_FLOAT";
+        case TokenType::IDNUMBER:       return "ID_NUMBER";
         case TokenType::IDBOOL:        return "ID_BOOL";
         case TokenType::IDSTRING:      return "ID_STRING";
-        case TokenType::IDVOID:        return "ID_VOID";
         case TokenType::IDFUNCTION:    return "ID_FUNCTION";
         case TokenType::IDPROCEDURE:   return "ID_PROCEDURE";
         case TokenType::IDPROCESS:     return "ID_PROCESS";

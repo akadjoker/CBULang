@@ -7,10 +7,8 @@
 enum LiteralType
 {
     STRING,
-    INT,
-    FLOAT,
-    BOOLEAN,
-    POINTER
+    NUMBER,
+    BOOLEAN
 };
 
 class Literal
@@ -19,11 +17,9 @@ private:
     LiteralType type;
       union Value
     {
-        int intValue;
         bool boolValue;
-        double floatValue;
+        double numberValue;
         char *stringValue;
-        void *pointerValue;
 
         Value();
         ~Value();
@@ -35,14 +31,10 @@ private:
         {
         case STRING:
             return "String";
-        case INT:
-            return "Int";
-        case FLOAT:
-            return "Float";
+        case NUMBER:
+            return "Number";
         case BOOLEAN:
             return "Boolean";
-        case POINTER:
-            return "Pointer";
         }
         return "";
     }
@@ -52,12 +44,10 @@ private:
     void copyValue(const Literal &other);
 public:
     Literal();
-    Literal(int ivalue);
     Literal(bool bvalue);
     Literal(double fvalue);
     Literal(const char *stringValue);
-    Literal(void *pointerValue);
-
+   
     virtual ~Literal();
 
   
@@ -67,26 +57,22 @@ public:
     LiteralType getType() const { return type; }
 
     char *getString() const;
-    int   getInt() const;
-    double getFloat() const;
+    double getNumber() const;
     bool  getBool() const;
-    void *getPointer() const;
-
-    void setPointer(void *value);
+    int   getInt() const;
+    float geFloat() const;
+    
     void setString(const char *stringValue);
-    void setInt(int value);
-    void setFloat(double value);
+    void setNumber(double value);
     void setBool(bool value);
 
     bool isTrue() const;
     bool isEqual(const Literal *other) const;
 
-    bool isInt() const;
-    bool isFloat() const;
+    bool isNumber() const;
     bool isBool() const;
     bool isString() const;
-    bool isPointer() const;
-
+    
     bool copyFrom(const Literal *other);
 
     void clear();

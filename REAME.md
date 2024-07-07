@@ -48,7 +48,7 @@ returnStmt      → "return" expression? ";"
 
 expression      → assignment
 
-assignment      → IDENTIFIER "=" assignment
+assignment      → IDENTIFIER ("="| "+=" | "*=" | "/=" | "-=") assignment
                 | logicOr
 
 logicOr         → logicAnd ("or" logicAnd)*
@@ -65,7 +65,7 @@ factor          → power (("*" | "/" | "%") power)*
 
 power           → unary ("^" unary)*
 
-unary           → ("!" | "-") unary
+unary           → ("!" | "-" | not | "++" | "--" ) unary
                 | primary
 
 primary         → NUMBER | STRING | "true" | "false" | "(" expression ")"
@@ -84,8 +84,7 @@ arguments       → expression ("," expression)*
 
 ### Data Types
 
-- `int`: Integer numbers.
-- `float`: Floating-point numbers.
+- `number`:  Double internal for all numbers
 - `bool`: Boolean values (`true` or `false`).
 - `string`: Sequences of characters.
 
@@ -93,8 +92,8 @@ arguments       → expression ("," expression)*
 
 - Declaration and initialization of variables:
   ```plaintext
-  int a = 50;
-  float start_time = now;
+  number a = 50;
+  number start_time = now;
   bool flag = true;
   string msg = "Hello, World!";
   ```
@@ -110,7 +109,7 @@ arguments       → expression ("," expression)*
   ```
 - **Functions**: Defined using the `function` keyword with a specified return type.
   ```plaintext
-  function fibonacci(int n): int
+  function fibonacci(number n): number
   begin
       if (n <= 1)
           return n;
@@ -138,7 +137,7 @@ arguments       → expression ("," expression)*
 - **Loops**:
   - **While Loop**:
     ```plaintext
-    int i = 0;
+    number i = 0;
     while (i < 18)
     begin
         print("fibonacci:" + fibonacci(i));
@@ -147,7 +146,7 @@ arguments       → expression ("," expression)*
     ```
   - **Repeat Until Loop**:
     ```plaintext
-    int c = 0;
+    number c = 0;
     repeat
     begin
         print(c);
@@ -157,7 +156,7 @@ arguments       → expression ("," expression)*
     ```
   - **For Loop**:
     ```plaintext
-    for (int i = 0; i < 10; i++)
+    for (number i = 0; i < 10; i++)
     begin
         if (i == 4)
             break;
@@ -169,7 +168,7 @@ arguments       → expression ("," expression)*
 
 - **Switch Case**:
   ```plaintext
-  int state = 10;
+  number state = 10;
   switch (state)
   begin
       case 0:
@@ -193,120 +192,9 @@ arguments       → expression ("," expression)*
 
 ### ToDo:
     classes
-    process
-    pointers
     structs
     vm bytecode
 
-### Example Program
-
-```plaintext
-program main;
-
-procedure test(string msg)
-begin
-    print(msg);
-end
-
-function fibonacci(int n): int
-begin
-    if (n <= 1)
-        return n;
-    else
-        return fibonacci(n - 1) + fibonacci(n - 2);
-end
-
-function say(): int
-begin
-    print("function ola ;) ");
-    return 100;
-end
-
-begin
-    int a = 50;
-
-    if (a == 4)
-    begin
-        print("4");
-    end elif (a == 5)
-    begin
-        print("5");
-    end else
-    begin
-        print("What?");
-    end
-
-    if (a == 4)
-        print(a);
-
-    float start_time = now;
-
-    print("Start: " + start_time);
-
-    int i = 0;
-    while (i < 18)
-    begin
-        print("fibonacci:" + fibonacci(i));
-        i = i + 1;
-    end
-
-    float end_time = now;
-
-    print("End: " + end_time);
-
-    float time = (end_time - start_time);
-
-    print("Time passed: " + time);
-
-    print("end loop with result: " + i);
-    print("end main script ;)");
-
-    int state = 10;
-    switch (state)
-    begin
-        case 0:
-        begin
-            print("0");
-        end
-        case 1:
-        begin
-            print("1");
-        end
-        default:
-            print("default");
-    end
-
-    int c = 0;
-    repeat
-    begin
-        print(c);
-        c = c + 1;
-    end
-    until (c > 10);
-
-    for (int i = 0; i < 10; i++)
-    begin
-        if (i == 4)
-            break;
-        print("For " + i);
-        if (i == 6)
-            continue;
-    end
-
-    int var = 0;
-
-    print(var);
-
-    var++;
-    var++;
-    var++;
-    int s = ++var;
-
-    print(var);
-    print(s);
-
-end.
-```
 ### Example Process
 
 ```plaintext
@@ -316,16 +204,16 @@ end.
         begin
                 x=mouse_x();
                 y=mouse_y();
-                float life =0.0;
+                number life =0.0;
                 loop
                     begin 
                         x = x + 5;
-                            if (x>=800.0)
+                            if (x>=800)
                             begin 
-                                x=0.0;
+                                x=0;
                             end
                         life = life + 1.0;
-                        if (life>=2000.0)
+                        if (life>=2000)
                         begin
                             break;
                         end

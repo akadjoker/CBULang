@@ -41,6 +41,6 @@ public:
     void load(BlockStmt *block);
 
     //LOCALS
-    float X;
-    float Y;
+    double X;
+    double Y;
 };
