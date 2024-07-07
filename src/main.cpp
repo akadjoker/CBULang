@@ -36,6 +36,9 @@ LiteralPtr native_writeln(ExecutionContext* ctx, int argc, LiteralList* argv)
             else if (ctx->isFloat(argv[i]))
             {
                 std::cout << argv[i]->getFloat();
+            } else 
+            {
+                std::cout << argv[i]->toString();
             }
     }
     std::cout<< std::endl;
@@ -60,10 +63,10 @@ static const NativeFuncDef native_funcs[] = {
 
         Lexer lexer = Lexer(code);
         std::vector<Token> tokens = lexer.scanTokens();
-        //  for (Token token : tokens)
-        //  {
-        //      std::cout << token.toString() << std::endl;
-        //  }
+         for (Token token : tokens)
+         {
+             //std::cout << token.toString() << std::endl;
+         }
          if (lexer.ready())
          {
             Parser parser = Parser(tokens);
@@ -76,8 +79,8 @@ static const NativeFuncDef native_funcs[] = {
             }
             if (program)
             {
-            interpreter.execute(program);
-            interpreter.run();
+            
+            interpreter.run(std::move(program));
             }
          }
         

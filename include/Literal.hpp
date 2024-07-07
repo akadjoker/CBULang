@@ -81,6 +81,12 @@ public:
     bool isTrue() const;
     bool isEqual(const Literal *other) const;
 
+    bool isInt() const;
+    bool isFloat() const;
+    bool isBool() const;
+    bool isString() const;
+    bool isPointer() const;
+
     bool copyFrom(const Literal *other);
 
     void clear();
@@ -89,4 +95,42 @@ public:
 
 
     
+};
+using LiteralPtr = std::shared_ptr<Literal>;
+
+class List 
+{
+
+private:
+    LiteralType type;
+    std::vector<LiteralPtr> elements;
+public:
+    List(LiteralType type);
+
+    LiteralType getType() const { return type; }
+    void add(const LiteralPtr &element) ;
+    LiteralPtr get(size_t index);
+    void set(size_t index, LiteralPtr element);
+    void clear();
+    bool remove(size_t index);
+    LiteralPtr pop();
+    size_t size() const { return elements.size(); }
+};
+
+class Map 
+{
+    private:
+    std::unordered_map<std::string, LiteralPtr> entries;
+    LiteralType type;
+public:
+    Map(LiteralType type);
+    
+    LiteralType getType() const { return type; }
+    void set(const std::string &key, const LiteralPtr &value);
+    LiteralPtr get(const std::string &key);
+    void clear();
+    bool remove(const std::string &key);
+    bool contains(const std::string &key);
+    size_t size() const { return entries.size(); }
+   
 };

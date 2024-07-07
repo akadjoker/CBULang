@@ -96,3 +96,8 @@ void ForStmt::accept(Visitor *visitor)
 {
      visitor->visitForStmt(this);
 }
+
+void ProcessStmt::accept(Visitor *visitor)
+{
+     visitor->visitProcessStmt(this);
+}

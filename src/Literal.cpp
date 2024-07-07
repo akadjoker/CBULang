@@ -38,6 +38,10 @@ bool Literal::isTrue() const
         return value.floatValue != 0.0f;
     else if (type == BOOLEAN)
         return value.boolValue;
+    else if (type == STRING)
+        return value.stringValue != nullptr;
+    else if (type == POINTER)
+        return value.pointerValue != nullptr;
     
     return false;
 }
@@ -53,9 +57,32 @@ bool Literal::isEqual(const Literal *other) const
         return value.floatValue == other->value.floatValue;
     else if (type == LiteralType::BOOLEAN)
         return value.boolValue == other->value.boolValue;
-    else
-        return value.intValue == other->value.intValue;
     return false;
+}
+
+bool Literal::isInt() const
+{
+    return type == LiteralType::INT;
+}
+
+bool Literal::isFloat() const
+{
+    return type == LiteralType::FLOAT;
+}
+
+bool Literal::isBool() const
+{
+    return type == LiteralType::BOOLEAN;
+}
+
+bool Literal::isString() const
+{
+    return type == LiteralType::STRING;
+}
+
+bool Literal::isPointer() const
+{
+    return type == LiteralType::POINTER;
 }
 
 Literal::Literal(const Literal &other) : type(other.type)
@@ -280,4 +307,90 @@ bool Literal::copyFrom(const Literal *other)
     copyValue(*other);
     return true;
     
+}
+
+List::List(LiteralType type)
+{
+    this->type = type;
+}
+
+void List::add(const LiteralPtr &element)
+{
+    if (element == nullptr )
+        return;
+    
+    elements.push_back(element);
+}
+
+LiteralPtr List::get(size_t index)
+{
+    if (index >= elements.size())
+        return nullptr;
+    return elements[index];
+}
+
+void List::set(size_t index, LiteralPtr element)
+{
+    if (index >= elements.size())
+        return;
+    elements[index] = element;
+}
+
+void List::clear()
+{
+    elements.clear();
+}
+
+bool List::remove(size_t index)
+{
+    if (index >= elements.size())
+        return false;
+    elements.erase(elements.begin() + index);
+    return true;
+}
+
+
+
+LiteralPtr List::pop()
+{
+    if (elements.size() == 0)
+        return nullptr;
+    LiteralPtr ret = elements.back();
+    elements.pop_back();
+    return ret;
+}
+
+Map::Map(LiteralType type)
+{
+    this->type = type;
+}
+
+void Map::set(const std::string &key, const LiteralPtr &value)
+{
+    entries[key] = value;
+}
+
+LiteralPtr Map::get(const std::string &key)
+{
+    if (entries.find(key) == entries.end())
+        return nullptr;
+    return entries[key];
+}
+
+void Map::clear()
+{
+    entries.clear();
+}
+
+bool Map::remove(const std::string &key)
+{
+    if (entries.find(key) == entries.end())
+        return false;
+    entries.erase(key);
+    return true;
+}
+
+bool Map::contains(const std::string &key)
+{
+    return entries.find(key) != entries.end();
 }

@@ -69,3 +69,8 @@ std::shared_ptr<Expr> NativeFunctionExpr::accept(Visitor *visitor)
 {
     return visitor->visitNativeFunctionExpr(this);
 }
+
+std::shared_ptr<Expr> ProcessCallExpr::accept(Visitor *visitor)
+{
+    return visitor->visitProcessCallExpr(this);
+}

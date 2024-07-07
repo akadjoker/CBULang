@@ -2,10 +2,38 @@
     program main;
     
    
+    process nave (string _name,float _x, float _y)
+    begin 
+            x =_x;
+            y =_y; 
+            string name =_name;
+
+            print("create nave: "+name+"  at x: "+x+" y:"+y);
+
+           
+  
+
+           print("kill: "+_name);
+           
+    end
 
 
     begin
         
-        writeln("luis santos:","idade: ",20);
+     
+
+    int frame =0;
+     
+     loop
+        begin 
+            print("loop");
+            frame++;
+            if (frame>10)
+                break;
+        end 
+
+     
+
+    print("By! By!");    
 
     end.

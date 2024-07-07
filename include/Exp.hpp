@@ -17,8 +17,10 @@ enum ExprType
     ASSIGN,
     LOGICAL,
     NOW,
-    CALL,
-    NATIVE
+    FUNCTIONCALL,
+    NATIVEFUNCTIONCALL,
+    PROCESSCALL,
+    MAX
 };
 
 struct FunctionStmt;
@@ -58,10 +60,12 @@ struct Expr
                 return "Logical";
             case NOW:
                 return "Now";
-            case CALL:
-                return "Call";
-            case NATIVE:
-                return "Native";   
+            case FUNCTIONCALL:
+                return "FunctionCall";
+            case NATIVEFUNCTIONCALL:
+                return "NativeFunctionCall";   
+            case PROCESSCALL:
+                return "ProcessCall";
             default:
                 return "Unknow: "+std::to_string((int)getType());
         }
@@ -198,7 +202,7 @@ struct FunctionCallExpr : public Expr
     : name(name), arguments(std::move(arguments)), expression(std::move(expr)) {}
 
 
-    ExprType getType() const override { return ExprType::CALL; }
+    ExprType getType() const override { return ExprType::FUNCTIONCALL; }
     std::shared_ptr<Expr> accept(Visitor *visitor) override;
 };
 
@@ -214,8 +218,24 @@ struct NativeFunctionExpr : public Expr
     NativeFunctionExpr(const std::string &name,int line, std::vector<std::shared_ptr<Expr>> parameters, unsigned int arity)
         : name(name), line(line),parameters(std::move(parameters)), arity(arity) {}
 
-    ExprType getType() const override { return ExprType::NATIVE; }
+    ExprType getType() const override { return ExprType::NATIVEFUNCTIONCALL; }
 
     std::shared_ptr<Expr> accept(Visitor *visitor) override;
 };
 
+struct ProcessCallExpr : public Expr
+{
+    std::string name;
+    int line;
+    std::vector<std::shared_ptr<Expr>> arguments;
+    unsigned int arity;
+
+
+    ProcessCallExpr(const std::string &name,int line, std::vector<std::shared_ptr<Expr>> parameters, unsigned int arity)
+        : name(name), line(line),arguments(std::move(parameters)), arity(arity)  {}
+        
+
+    ExprType getType() const override { return ExprType::PROCESSCALL; }
+
+    std::shared_ptr<Expr> accept(Visitor *visitor) override;
+};

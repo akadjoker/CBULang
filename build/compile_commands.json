@@ -31,6 +31,11 @@
 },
 {
   "directory": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/build",
+  "command": "/usr/bin/c++ -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/src  -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx -o CMakeFiles/main.dir/src/Scheduler.cpp.o -c /media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Scheduler.cpp",
+  "file": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Scheduler.cpp"
+},
+{
+  "directory": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/build",
   "command": "/usr/bin/c++ -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/src  -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx -o CMakeFiles/main.dir/src/Stm.cpp.o -c /media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Stm.cpp",
   "file": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Stm.cpp"
 },

@@ -3,19 +3,20 @@
 #include "Literal.hpp"
 #include "Utils.hpp"
 
+unsigned long processID = 0;
 
-
-
-uintptr_t getAddress(const void *ptr)  
+static uintptr_t getAddress(const void *ptr)  
 {
         return reinterpret_cast<uintptr_t>(ptr);
 }
 
 Interpreter::Interpreter()
 {
+    Info("Create Interpreter");
     currentDepth = 0;
     addressLoop = 0x0;
     environment = std::make_shared<Environment>(0, nullptr);
+    prevEnvironment = nullptr;
     context = std::make_shared<ExecutionContext>(this);
     panicMode = false;
     start_time = std::chrono::high_resolution_clock::now();
@@ -24,7 +25,7 @@ Interpreter::Interpreter()
 
 Interpreter::~Interpreter()
 {
-    Log(0, "Delete Interpreter");
+    Log(0, "Release Interpreter");
   
     procedureList.clear();
     functionList.clear();
@@ -103,21 +104,11 @@ std::shared_ptr<Expr> Interpreter::evaluate(const std::shared_ptr<Expr> &expr)
 
 
 
-
 void Interpreter::execute(const std::shared_ptr<Stmt> &statement)
 {
-
-   // Info("Interpreting statement: "+ statement->toString());
-    // if (statement->getType() == StmtType::WHILE)
-    // {
-    //     auto whileStmt = dynamic_cast<WhileStmt *>(statement.get());
-    //     visitWhileStmt(whileStmt);
-    //     return;
-    // }
-
+   // if (statement->getType() == StmtType::PROGRAM)
+    statements.push_back(statement);
     statement->accept(this);
-
-
 }
 
 
@@ -127,11 +118,29 @@ void Interpreter::execute(Stmt *statement)
     statement->accept(this);
 }
 
-void Interpreter::run()
+void Interpreter::run(std::shared_ptr<Stmt> statement)
 {
 
-    scheduler.run();
+    // std::shared_ptr<Program> program = std::dynamic_pointer_cast<Program>(statement);
+    // for (auto &stmt : program->statements)
+    // {
+    //     execute(stmt);
+    // }
+
+    // auto programTask = std::make_unique<ProgramTask>(program, this);
+    // programTask->run();
+    // scheduler.addTask(std::move(programTask));
+    
+
+    execute(statement);
+
+
+      
+    Info("Run complete");
 }
+
+
+
 
 void Interpreter::visitPrintStmt(PrintStmt *stmt)
 {
@@ -188,14 +197,14 @@ std::shared_ptr<Expr> Interpreter::visitVariableExpr(VariableExpr *expr)
 
     if (!this->environment->contains(name))
     {
-        Warning("Load variable  '" + name + "' not  defined at line: " + std::to_string(line));
+        Error("Load variable  '" + name + "' not  defined at line: " + std::to_string(line));
      return std::make_shared<EmptyExpr>();
     }
 
     Literal *value = this->environment->get(name).get();
     if (!value)
     {
-        Warning("Load variable  '" + name + "'is null at line: " + std::to_string(line));
+        Error("Load variable  '" + name + "'is null at line: " + std::to_string(line));
      return std::make_shared<EmptyExpr>();
     }
 
@@ -248,12 +257,25 @@ std::shared_ptr<Expr> Interpreter::visitAssignExpr(AssignExpr *expr)
             return std::make_shared<EmptyExpr>();
         }
 
-        if (oldLiteral->getType() != literal->value->getType())
+        if (oldLiteral->getType()==LiteralType::INT && literal->value->getType()==LiteralType::FLOAT)
         {
-
-            Error(expr->name, "Variable  '" + name + "' type not match");
+             this->environment->assign(name, literal->value);
+        } else 
+        if (oldLiteral->getType()==LiteralType::FLOAT && literal->value->getType()==LiteralType::INT)
+        {
+             this->environment->assign(name, literal->value);
+        } else 
+        if (oldLiteral->getType()==literal->value->getType())
+        {
+             this->environment->assign(name, literal->value);
+        } else
+        {
+             Error(expr->name, "Variable  '" + name + "' type not match");
             return std::make_shared<EmptyExpr>();
+
         }
+            
+        
 
         this->environment->assign(name, literal->value);
     }
@@ -316,8 +338,10 @@ void Interpreter::executeBlock(BlockStmt *stmt, const std::shared_ptr<Environmen
         }
     }
     this->environment = previous;
-    scheduler.run();
+
 }
+
+
 
 void Interpreter::visitBlockStmt(BlockStmt *stmt)
 {
@@ -334,14 +358,12 @@ void Interpreter::visitExpressionStmt(ExpressionStmt *stmt)
 
 void Interpreter::visitProgram(Program *stmt)
 {
+
     for (auto &stmt : stmt->statements)
     {
         try 
         {
-              
-                    execute(stmt);
-
-            
+            execute(stmt);
         }
         catch (ReturnException &returnValue)
         {
@@ -349,10 +371,18 @@ void Interpreter::visitProgram(Program *stmt)
         }
         
     }
+        try 
+        {
+            execute(stmt->statement);
+        }
+        catch (ReturnException &returnValue)
+        {
+            
+        }
 
-    execute(stmt->statement);
-    scheduler.run();
-  
+
+
+ 
 }
 
 void Interpreter::visitEmptyStmt(EmptyStmt *stmt)
@@ -523,8 +553,6 @@ std::shared_ptr<Expr> Interpreter::visitNativeFunctionExpr(NativeFunctionExpr *e
     const std::string  name = expr->name;
     int line = expr->line - 1;
 
-    std::cout<<"Native function: '" << name << " line:  "<< std::to_string(line) << " call" << std::endl;
-    
     if (nativeFunctions.find(name) == nativeFunctions.end())
     {
         Error("Native function '" + name + "' at line: " + std::to_string(line) +" not defined");
@@ -548,7 +576,81 @@ std::shared_ptr<Expr> Interpreter::visitNativeFunctionExpr(NativeFunctionExpr *e
     auto function = nativeFunctions[name];
     LiteralPtr result = function(this->context.get(),numArgs, args.data());
     return std::make_shared<LiteralExpr>(result);
+}
 
+std::shared_ptr<Expr> Interpreter::visitProcessCallExpr(ProcessCallExpr *expr)
+{
+
+    const std::string  name = expr->name;
+    int line = expr->line - 1;
+    if (processList.find(name) == processList.end())
+    {
+        Error("Process '" + name + "' at line: " + std::to_string(line) + " not defined");
+        return std::make_shared<EmptyExpr>();
+    }
+    unsigned long id = processID++;
+    ProcessStmt *process = processList[name];
+    if (!process)
+    {
+        Error("Process '" + name + "' die");
+        return std::make_shared<EmptyExpr>();
+    }
+    
+
+    unsigned int numArgsExpectd = process->parameter.size();
+    unsigned int numArgs = expr->arguments.size();
+
+    if (numArgs != numArgsExpectd)
+    {
+        Error("Incorrect number of arguments passed to process '" + name + "' at line: " + std::to_string(line) + " expected: " + std::to_string(numArgsExpectd) + " got: " + std::to_string(numArgs));
+        return std::make_shared<EmptyExpr>();
+    }
+    this->currentDepth++;
+    std::shared_ptr<Environment> newEnv = std::make_shared<Environment>(this->currentDepth, this->environment);
+
+        newEnv->addInt("id", id);
+        newEnv->addInt("graph", 0);
+        newEnv->addFloat("x", 0.0);
+        newEnv->addFloat("y", 0.0);
+
+    for (unsigned int i = 0; i < numArgs; i++)
+    {
+        std::shared_ptr<Expr> value = evaluate(expr->arguments[i]);
+        if (!value)
+        {
+            Error( "Invalid argument passed to process '" + name + "' at line: " + std::to_string(line));
+            return std::make_shared<EmptyExpr>();
+        };
+        std::string argName = process->parameter[i].get()->name;
+        if (value->getType() == ExprType::LITERAL)
+        {
+            LiteralExpr *literal = dynamic_cast<LiteralExpr *>(value.get());
+            if (!newEnv->define(argName, literal->value))
+            {
+                Error( "Process variable '" + argName + "' already defined at line: " + std::to_string(line));
+                return std::make_shared<EmptyExpr>();
+            }
+        }
+    }
+
+    auto previous = this->environment;
+    this->environment = newEnv;
+    std::shared_ptr<Expr> result = nullptr;
+    BlockStmt *block = dynamic_cast<BlockStmt *>(process->body.get());
+    try
+    {
+        for (auto stmt : block->declarations)
+        {
+            execute(stmt);
+        }  
+    }
+    catch (ReturnException &returnValue)
+    {
+        
+    }
+    this->environment = previous;
+    this->currentDepth--;
+    return createIntLiteral(id);    
 }
 
 void Interpreter::visitFunctionStmt(FunctionStmt *stmt)
@@ -560,6 +662,17 @@ void Interpreter::visitFunctionStmt(FunctionStmt *stmt)
     }
 
     functionList[stmt->name] = stmt;
+}
+
+void Interpreter::visitProcessStmt(ProcessStmt *stmt)
+{
+    if (procedureList.find(stmt->name) != procedureList.end())
+    {
+        Error("Procedure '" + stmt->name + "' already defined");
+        return;
+    }
+    processList[stmt->name] = stmt;
+
 }
 
 void Interpreter::visitReturnStmt(ReturnStmt *stmt)
@@ -696,13 +809,14 @@ void Interpreter::visitRepeatStmt(RepeatStmt *stmt)
     addressLoop = 0x0;
 }
 
-void Interpreter::visitLoopStmt(LoopStmt *stmt)
+
+bool Interpreter::executeLoop(LoopStmt *stmt)
 {
 
     if (!stmt)
     {
         Error("invalid repeat condition expression");
-        return;
+        return true;
     }
     try
     {
@@ -722,8 +836,19 @@ void Interpreter::visitLoopStmt(LoopStmt *stmt)
     catch (BreakException &)
     {
         // Exit the loop
+        return true;
     }
     addressLoop = 0x0;
+    return false;
+}
+
+void Interpreter::visitLoopStmt(LoopStmt *stmt)
+{
+    // auto loopTask = std::make_unique<LoopTask>(stmt, this);
+    // loopTask->run();
+    // scheduler.addTask(std::move(loopTask));
+    executeLoop(stmt);
+    
 }
 
 void Interpreter::visitSwitchStmt(SwitchStmt *stmt)
@@ -983,6 +1108,7 @@ Environment::Environment(int depth, const std::shared_ptr<Environment> &parent) 
 
 Environment::~Environment()
 {
+   // std::cout<<"~Environment()"<< m_depth<<std::endl;
 }
 
 bool Environment::define(const std::string &name, const std::shared_ptr<Literal> &value)
@@ -1050,16 +1176,41 @@ bool Environment::contains(const std::string &name)
     return false;
 }
 
+bool Environment::addInt(const std::string &name, int value)
+{
+    auto literal = LiteralPool::Instance().acquireInt(value);
+    return define(name, literal);
+}
+
+bool Environment::addFloat(const std::string &name, double value)
+{
+    auto literal = LiteralPool::Instance().acquireFloat(value);
+    return define(name, literal);
+}
+
+bool Environment::addString(const std::string &name, const std::string &value)
+{
+    auto literal = LiteralPool::Instance().acquireString(value);
+    return define(name, literal);
+}
+
+bool Environment::addBool(const std::string &name, bool value)
+{
+    auto literal = LiteralPool::Instance().acquireBool(value);
+    return define(name, literal);
+}
+
+
 // //*****************************************************************************************
 
 LiteralPool::LiteralPool()
 {
-   // init(5);
+   
 }
 
 LiteralPool::~LiteralPool()
 {
-    Log(0, "LiteralPool: %d", pool.size());
+   
     clear();
 }
 
@@ -1154,7 +1305,7 @@ void LiteralPool::release(std::shared_ptr<Literal> literal)
 
 void LiteralPool::clear()
 {
-    Log(0, "LiteralPool: %d", pool.size());
+    
     pool.clear();
 }
 
@@ -1200,51 +1351,6 @@ std::shared_ptr<LiteralExpr> LiteralPool::createPointerLiteral(void *value)
         return std::make_shared<LiteralExpr>(std::move(std::make_shared<Literal>(value)));
 }
 
-void Scheduler::addTask(std::unique_ptr<Task> task)
-{
-    tasks.push(std::move(task));
-}
-
-void Scheduler::run()
-{
-    
-        while (!tasks.empty())
-        {
-            auto &task = tasks.front();
-            bool completed = task->run();
-            if (completed)
-            {
-                tasks.pop();
-            }
-            else
-            {
-
-                tasks.push(std::move(tasks.front()));
-                tasks.pop();
-            }
-        }
-    
-}
-
-bool WhileTask::run()
-{
-   
-     auto result = interpreter->evaluate(stmt->condition);
-    if (!result)
-    {
-        interpreter->Error("invalid condition expression");
-        return true; 
-    }
-
-    if (!interpreter->isTruthy(result))
-    {
-        return true; 
-    }
-
-    interpreter->execute(stmt->body);
-    return false; 
-
-}
 
 
 LiteralPtr ExecutionContext::asInt(int value)
@@ -1308,3 +1414,4 @@ LiteralPtr ExecutionContext::asString(const std::string &value)
 {
     return std::make_shared<Literal>(value.c_str());
 }
+

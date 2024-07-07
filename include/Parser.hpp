@@ -68,7 +68,14 @@ private:
 
      std::shared_ptr<Literal> number();
      std::shared_ptr<Literal> string();
+
+
+     std::shared_ptr<FunctionCallExpr> functionCall(const std::shared_ptr<Expr> &expr);
      std::shared_ptr<NativeFunctionExpr> defNativeCall(const std::shared_ptr<VariableExpr> &expr);
+     std::shared_ptr<ProcessCallExpr> processCall(const std::shared_ptr<Expr> &expr);
+     
+
+     
 
      // Statements
      std::shared_ptr<ExpressionStmt> expressionStatement();
@@ -96,7 +103,10 @@ private:
      std::shared_ptr<ProcedureCallStmt> procedureCall(); // call of procedure
 
      std::shared_ptr<FunctionStmt> functionStmt();
-     std::shared_ptr<FunctionCallExpr> functionCall(const std::shared_ptr<Expr> &expr);
+     
+     std::shared_ptr<ProcessStmt> processStmt();
+     
+     
 
      std::shared_ptr<VarStmt> varDeclaration(LiteralType type);
    

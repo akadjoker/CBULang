@@ -29,8 +29,7 @@ enum StmtType
     PROGRAM,
     STMTCALL,
     PROCEDURECALL,
-    FUNCTIONCALL,
-    PROCESSCALL
+    COUNT,
 
 };
 
@@ -90,10 +89,6 @@ struct Stmt
             return "StmtCall";
         case PROCEDURECALL:
             return "ProcedureCall";
-        case FUNCTIONCALL:
-            return "FunctionCall";
-        case PROCESSCALL:
-            return "ProcessCall";
 
         default:
             return "Unknown";
@@ -133,6 +128,10 @@ struct Program : public Stmt
 
     StmtType getType() const override { return StmtType::PROGRAM; }
     void accept(Visitor *visitor) override;
+    ~Program() 
+    {
+        std::cout<<"~Program()"<<std::endl;
+    }
    
 };
 
@@ -205,7 +204,7 @@ struct Argument
     name(name), expression(std::move(expression)) {}
 };
 
-struct ProcedureStmt : public Stmt
+struct ProcedureStmt : public Stmt //declaration
 {
     std::string name;
     std::vector<std::shared_ptr<Argument>> parameter;
@@ -343,3 +342,18 @@ struct SwitchStmt : public Stmt
     StmtType getType() const override { return StmtType::SWITCH; }
     void accept(Visitor *visitor) override;
 };
+
+struct ProcessStmt : public Stmt
+{
+    std::string name;
+    std::vector<std::shared_ptr<Argument>> parameter;
+    std::shared_ptr<Stmt> body;
+ 
+
+    ProcessStmt(std::string name, std::vector<std::shared_ptr<Argument>> parameter, std::shared_ptr<Stmt> body)
+        : name(std::move(name)), parameter(std::move(parameter)), body(std::move(body)) {}
+
+    StmtType getType() const override { return StmtType::PROCESS; }
+    void accept(Visitor *visitor) override;
+};
+

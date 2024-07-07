@@ -290,7 +290,11 @@ std::shared_ptr<Expr> Parser::call()
         if (match(TokenType::IDFUNCTION))
         {
             return functionCall(expr);
-        }        
+        } else 
+        if (match(TokenType::IDPROCESS))       
+        {
+            return processCall(expr);
+        }
         else
         {
             break;
@@ -399,6 +403,7 @@ std::shared_ptr<Stmt> Parser::statement()
     {
         return procedureCall();
     }
+ 
     if (match(TokenType::SWITCH))
     {
         return switchStmt();
@@ -780,6 +785,42 @@ std::shared_ptr<ProcedureStmt> Parser::procedureStmt()
     return std::make_shared<ProcedureStmt>(nameStr, std::move(parameter), std::move(body));
 }
 
+std::shared_ptr<ProcessCallExpr> Parser::processCall(const std::shared_ptr<Expr> &expr)
+{
+
+   
+    std::vector<std::shared_ptr<Expr>> arguments;
+    Token token = previous();
+    
+    consume(TokenType::LEFT_PAREN, "Expect '(' after process name.");
+
+    std::string name = token.lexeme;
+    int line = token.line;
+   
+     
+    if (match(TokenType::RIGHT_PAREN))
+    {
+     
+    }else 
+    do
+    {   
+            std::shared_ptr<Expr> value = expression();
+            if (value->getType() == ExprType::LITERAL)
+            {
+                arguments.push_back(value);
+            }
+            
+            if (match(TokenType::RIGHT_PAREN)) break;
+           
+            consume(TokenType::COMMA, "Expect ',' after arguments.");
+            
+    }while (!check(TokenType::RIGHT_PAREN) || !isAtEnd());
+
+    unsigned int arity = arguments.size();
+    return std::make_shared<ProcessCallExpr>(name,line, std::move(arguments), arity);
+}
+
+
 std::shared_ptr<FunctionCallExpr> Parser::functionCall(const std::shared_ptr<Expr> &expr)
 {
 
@@ -806,6 +847,60 @@ std::shared_ptr<FunctionCallExpr> Parser::functionCall(const std::shared_ptr<Exp
     return std::make_shared<FunctionCallExpr>(name, std::move(arguments), std::move(expr));  
 }
 
+std::shared_ptr<ProcessStmt> Parser::processStmt()
+{
+    Token name = consume(TokenType::IDPROCESS,"Expect process name .");
+    std::string nameStr = name.literal;
+    consume(TokenType::LEFT_PAREN,"Expect '(' after process name.");
+    std::vector<std::shared_ptr<Argument>> parameter;
+    if (!check(TokenType::RIGHT_PAREN) || !isAtEnd())
+    {
+        do
+        {
+            
+            if (match(TokenType::IDINT))
+            {
+                  Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
+                  std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createIntLiteral(INT32_MAX);
+                  std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
+                  parameter.push_back(arg);
+            } else 
+            if (match(TokenType::IDFLOAT))
+            {
+                    Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
+                    
+                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createFloatLiteral(MAXFLOAT);
+                    std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
+                    parameter.push_back(arg);
+
+            } else 
+            if (match(TokenType::IDSTRING))
+            {
+                Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
+                std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createStringLiteral("NULL");
+                std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
+                parameter.push_back(arg);
+               
+            } else 
+            if (match(TokenType::IDBOOL))
+            {
+                    Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
+                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createBoolLiteral(false);
+                    std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
+                    parameter.push_back(arg);
+            }
+        } while (match(TokenType::COMMA));
+    }
+    
+    consume(TokenType::RIGHT_PAREN,"Expect ')' after process name.");
+    if (!check(TokenType::BEGIN))
+    {
+        Error(tokens[current],"Expect 'begin'  ");
+    }
+
+    std::shared_ptr<Stmt> body = statement();
+    return std::make_shared<ProcessStmt>(nameStr, std::move(parameter), std::move(body));
+}
 
 std::shared_ptr<ProcedureCallStmt> Parser::procedureCall()
 {
@@ -910,7 +1005,7 @@ std::shared_ptr<Stmt> Parser::defDeclaration()
     }
     if (match(TokenType::PROCESS))
     {
-       
+       return processStmt();
     } 
     return emptyDeclaration();
 }
