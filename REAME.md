@@ -307,3 +307,41 @@ begin
 
 end.
 ```
+### Example Process
+
+```plaintext
+
+    program main;
+        process nave()
+        begin
+                x=mouse_x();
+                y=mouse_y();
+                float life =0.0;
+                loop
+                    begin 
+                        x = x + 5;
+                            if (x>=800.0)
+                            begin 
+                                x=0.0;
+                            end
+                        life = life + 1.0;
+                        if (life>=2000.0)
+                        begin
+                            break;
+                        end
+                    end 
+        end
+        process main()
+        begin 
+            loop 
+            begin 
+               if (mouse_down(0))
+               begin
+                    nave();
+               end
+            end
+        end
+    begin
+       main();//main process 
+    end.
+```    

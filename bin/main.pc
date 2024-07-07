@@ -1,39 +1,33 @@
-
     program main;
-    
-   
-    process nave (string _name,float _x, float _y)
-    begin 
-            x =_x;
-            y =_y; 
-            string name =_name;
-
-            print("create nave: "+name+"  at x: "+x+" y:"+y);
-
-           
-  
-
-           print("kill: "+_name);
-           
-    end
-
-
-    begin
-        
-     
-
-    int frame =0;
-     
-     loop
+        process nave()
+        begin
+                x=mouse_x();
+                y=mouse_y();
+                float life =0.0;
+                loop
+                    begin 
+                        x = x + 5;
+                            if (x>=800.0)
+                            begin 
+                                x=0.0;
+                            end
+                        life = life + 1.0;
+                        if (life>=2000.0)
+                        begin
+                            break;
+                        end
+                    end 
+        end
+        process main()
         begin 
-            print("loop");
-            frame++;
-            if (frame>10)
-                break;
-        end 
-
-     
-
-    print("By! By!");    
-
+            loop 
+            begin 
+               if (mouse_down(0))
+               begin
+                    nave();
+               end
+            end
+        end
+    begin
+       main();//main process 
     end.

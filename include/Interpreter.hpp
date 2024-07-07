@@ -3,14 +3,14 @@
 #include "Exp.hpp"
 #include "Stm.hpp"
 #include "Process.hpp"
-#include "Scheduler.hpp"
+
 
 const bool USE_POOL = false;
 
 class Interpreter;
 class ExecutionContext;
 
-using LiteralList = Literal*;
+using LiteralList = std::shared_ptr<Literal>;
 typedef LiteralPtr (*NativeFunction)(ExecutionContext* ctx, int argc, LiteralList* argv);
 
 typedef struct 
@@ -57,10 +57,10 @@ public:
     bool isTruthy(const LiteralPtr &value);
     bool isEqual(const LiteralPtr &lhs, const LiteralPtr &rhs);
 
-    bool isString( Literal *value);
-    bool isInt( Literal *value);
-    bool isFloat( Literal *value);
-    bool isBool( Literal *value);
+    bool isString(const LiteralList &value);
+    bool isInt(const LiteralList &value);
+    bool isFloat(const LiteralList &value);
+    bool isBool(const LiteralList &value);
     
     LiteralPtr asInt(int value);
     LiteralPtr asFloat(double value);
@@ -68,12 +68,16 @@ public:
     LiteralPtr asString(const char &value);
     LiteralPtr asBool(bool value);
     LiteralPtr asPointer(void *value);
+    void Error(const std::string &message);
+    void Info(const std::string &message);
 private:
     friend class Interpreter;
     
     
     Interpreter *interpreter;
 };
+
+
 
 class Visitor
 {
@@ -198,6 +202,8 @@ public:
     bool addString(const std::string &name, const std::string &value);
 
 
+    unsigned int count() const { return m_values.size(); }
+
     unsigned int getDepth() const { return m_depth; }
 };
 
@@ -226,16 +232,11 @@ public:
 
     void visitPrintStmt(PrintStmt *stmt);
     void visitVarStmt(VarStmt *stmt);
-
     void visitBlockStmt(BlockStmt *stmt);
     void visitExpressionStmt(ExpressionStmt *stmt);
     void visitProgram(Program *stmt);
     void visitEmptyStmt(EmptyStmt *stmt);
-
     void visitProcedureCallStmt(ProcedureCallStmt *stmt);
-
-    
-
     void visitReturnStmt(ReturnStmt *stmt);
     void visitIfStmt(IfStmt *stmt);
     void visitWhileStmt(WhileStmt *stmt);
@@ -265,10 +266,15 @@ public:
     //std::shared_ptr<Expr> evaluate(const std::unique_ptr<Expr> &expr);
 
 
-//taks
-    bool executeLoop(LoopStmt *stmt);
 
-    void run( std::shared_ptr<Stmt> statement);
+
+//taks
+  
+ 
+
+    bool run( );
+    void build(std::shared_ptr<Stmt> statement);
+
 
     void Error(const Token &token, const std::string &message);
     void Warning(const std::string &message);
@@ -278,20 +284,36 @@ public:
     bool Equal(LiteralExpr *a, LiteralExpr *b);
 
 
-
     void registerFunction(const std::string &name, NativeFunction function);
+
+    std::shared_ptr<Environment> environment;
+    
+   
+  
+    void executeBlock(BlockStmt *stmt, const std::shared_ptr<Environment> &env);
+     
+     size_t Count() const { return processes.size(); }
 
 private:
     friend class Parser;
     bool panicMode;
     unsigned int currentDepth;
     uintptr_t addressLoop;
-    Scheduler scheduler;
-    std::shared_ptr<Environment> environment;
-    std::shared_ptr<Environment> prevEnvironment;
+    unsigned long BlockID;
+    
+
+    
+
+
+    std::shared_ptr<Literal> native_args[25];
+    std::shared_ptr<Environment> globalEnvironment;
+    std::stack<std::shared_ptr<Environment>> environmentStack;
     std::shared_ptr<ExecutionContext> context;
     std::chrono::high_resolution_clock::time_point start_time;
-    std::vector<std::shared_ptr<Stmt>> statements;
+    std::vector<std::unique_ptr<Process>> processes;
+    std::vector<std::unique_ptr<Process>> remove_processes;
+
+
     float time_elapsed();
 
     std::shared_ptr<LiteralExpr> createIntLiteral(int value);
@@ -303,11 +325,12 @@ private:
     NativeFunction getNativeFunction(const std::string &name) const;
     bool isNativeFunctionDefined(const std::string &name) const;
 
-        void executeBlock(BlockStmt * stmt, const std::shared_ptr<Environment> &env);
+  
+   
 
-        std::unordered_map<std::string, ProcedureStmt *> procedureList;
-        std::unordered_map<std::string, FunctionStmt *> functionList;
-        std::unordered_map<std::string, ProcessStmt *> processList;
+    std::unordered_map<std::string, ProcedureStmt *> procedureList;
+    std::unordered_map<std::string, FunctionStmt *> functionList;
+    std::unordered_map<std::string, ProcessStmt *> processList;
 
-        std::unordered_map<std::string, NativeFunction> nativeFunctions;
+    std::unordered_map<std::string, NativeFunction> nativeFunctions;
     };

@@ -45,7 +45,26 @@ std::shared_ptr<Expr> Interpreter::visitGroupingExpr(GroupingExpr *expr)
 std::shared_ptr<Expr> Interpreter::visitLiteralExpr(LiteralExpr *expr)
 {
 
-        return std::shared_ptr<Expr>(expr, [](Expr*){});  
+        if (expr->value->getType() == LiteralType::INT)
+        {
+            return createIntLiteral(expr->value->getInt());
+        }
+        else if (expr->value->getType() == LiteralType::FLOAT)
+        {
+            return createFloatLiteral(expr->value->getFloat());
+        }
+        else if (expr->value->getType() == LiteralType::STRING)
+        {
+            return createStringLiteral(expr->value->getString());
+        }
+        else if (expr->value->getType() == LiteralType::BOOLEAN)
+        {
+            return createBoolLiteral(expr->value->getBool());
+        }
+        else
+        {
+            return std::make_shared<EmptyExpr>();
+        }
 
    
 }
@@ -291,6 +310,12 @@ std::shared_ptr<Expr> Interpreter::visitBinaryExpr(BinaryExpr *expr)
             else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
             {
                 return createBoolLiteral(leftLiteral->value->getFloat() < rightLiteral->value->getFloat());
+            } else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
+            {
+                return createBoolLiteral(leftLiteral->value->getInt() < rightLiteral->value->getFloat());
+            } else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
+            {
+                return createBoolLiteral(leftLiteral->value->getFloat() < rightLiteral->value->getInt());
             }
             else
             {
@@ -306,6 +331,13 @@ std::shared_ptr<Expr> Interpreter::visitBinaryExpr(BinaryExpr *expr)
             else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
             {
                 return createBoolLiteral(leftLiteral->value->getFloat() <= rightLiteral->value->getFloat());
+            } else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
+            {
+                return createBoolLiteral(leftLiteral->value->getInt() <= rightLiteral->value->getFloat());
+            }
+            else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
+            {
+                return createBoolLiteral(leftLiteral->value->getFloat() <= rightLiteral->value->getInt());
             }
             else
             {
@@ -321,6 +353,12 @@ std::shared_ptr<Expr> Interpreter::visitBinaryExpr(BinaryExpr *expr)
             else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
             {
                 return createBoolLiteral(leftLiteral->value->getFloat() > rightLiteral->value->getFloat());
+            } else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
+            {
+                return createBoolLiteral(leftLiteral->value->getInt() > rightLiteral->value->getFloat());
+            } else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
+            {
+                return createBoolLiteral(leftLiteral->value->getFloat() > rightLiteral->value->getInt());
             }
             else
             {
@@ -335,6 +373,12 @@ std::shared_ptr<Expr> Interpreter::visitBinaryExpr(BinaryExpr *expr)
             }else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::FLOAT)
             {
                 return createBoolLiteral(leftLiteral->value->getFloat() >= rightLiteral->value->getFloat());
+            } else if (leftLiteral->value->getType() == LiteralType::INT && rightLiteral->value->getType() == LiteralType::FLOAT)
+            {
+                return createBoolLiteral(leftLiteral->value->getInt() >= rightLiteral->value->getFloat());
+            } else if (leftLiteral->value->getType() == LiteralType::FLOAT && rightLiteral->value->getType() == LiteralType::INT)
+            {
+                return createBoolLiteral(leftLiteral->value->getFloat() >= rightLiteral->value->getInt());
             }
             else
             {

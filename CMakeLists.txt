@@ -43,3 +43,5 @@ elseif(CMAKE_BUILD_TYPE MATCHES Release)
     target_compile_options(main PRIVATE -O3 -march=native -flto -funroll-loops -DNDEBUG)
     target_link_options(main PRIVATE -O3 -march=native -flto -funroll-loops -DNDEBUG)
 endif()
+
+target_link_libraries(main PRIVATE raylib)

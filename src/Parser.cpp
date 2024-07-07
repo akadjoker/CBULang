@@ -294,7 +294,7 @@ std::shared_ptr<Expr> Parser::call()
         if (match(TokenType::IDPROCESS))       
         {
             return processCall(expr);
-        }
+        }  
         else
         {
             break;
@@ -940,11 +940,7 @@ std::shared_ptr<NativeFunctionExpr> Parser::defNativeCall(const std::shared_ptr<
     do
     {   
             std::shared_ptr<Expr> value = expression();
-            if (value->getType() == ExprType::LITERAL)
-            {
-                arguments.push_back(value);
-            }
-            
+            arguments.push_back(value);
             if (match(TokenType::RIGHT_PAREN)) break;
            
             consume(TokenType::COMMA, "Expect ',' after arguments.");
@@ -952,6 +948,7 @@ std::shared_ptr<NativeFunctionExpr> Parser::defNativeCall(const std::shared_ptr<
     }while (!check(TokenType::RIGHT_PAREN) || !isAtEnd());
 
     unsigned int arity = arguments.size();
+    
     return std::make_shared<NativeFunctionExpr>(name,line, std::move(arguments), arity);
   
 }
