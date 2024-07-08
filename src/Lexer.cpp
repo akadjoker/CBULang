@@ -48,7 +48,9 @@ Lexer::Lexer(const std::string &input)
 
     
     keywords["nil"] = TokenType::NIL;
-    keywords["number"] = TokenType::IDNUMBER;
+    keywords["int"] = TokenType::IDINT;
+    keywords["float"] = TokenType::IDFLOAT;
+    keywords["byte"] = TokenType::IDBYTE;
     keywords["string"] = TokenType::IDSTRING;
     keywords["bool"] = TokenType::IDBOOL;
     keywords["false"] = TokenType::FALSE;
@@ -492,11 +494,13 @@ void Lexer::string()
 void Lexer::number()
 {
     std::string text = "";
+    bool hasDot = false;
 
     while (isDigit(peek())) advance();
 
     if (peek() == '.' && isDigit(peekNext()))
     {
+        hasDot = true;
         advance();
         while (isDigit(peek())) advance();
     }
@@ -505,7 +509,7 @@ void Lexer::number()
    
 
     text = input.substr(start, current - start);
-    addToken(TokenType::NUMBER, text);
+    addToken((hasDot ? TokenType::FLOAT : TokenType::INT), text);
  
 }
 

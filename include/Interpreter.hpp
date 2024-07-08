@@ -54,20 +54,26 @@ class ExecutionContext
 public:
     ~ExecutionContext()=default;
     ExecutionContext(Interpreter *interpreter);
+
     bool isTruthy(const LiteralPtr &value);
     bool isEqual(const LiteralPtr &lhs, const LiteralPtr &rhs);
 
     bool isString(const LiteralList &value);
-    bool isNumber(const LiteralList &value);
+    bool isInt(const LiteralList &value);
+    bool isFloat(const LiteralList &value);
     bool isBool(const LiteralList &value);
+    bool isByte(const LiteralList &value);
     
-    LiteralPtr asNumber(double value);
-    LiteralPtr asFloat(float value);
-    LiteralPtr asInt(int value);
+   
+    LiteralPtr asFloat(double value);
+
+    LiteralPtr asByte(unsigned char value);
+ 
+    LiteralPtr asInt(long value);
     LiteralPtr asString(const std::string &value);
     LiteralPtr asString(const char *value);
     LiteralPtr asBool(bool value);
-    LiteralPtr asPointer(void *value);
+
     void Error(const std::string &message);
     void Info(const std::string &message);
 private:
@@ -156,10 +162,12 @@ public:
     }
 
     
-    std::shared_ptr<Literal> acquireNumber(double value);
+    std::shared_ptr<Literal> acquireInteger(long value);
+    std::shared_ptr<Literal> acquireFloat(double value);
+    std::shared_ptr<Literal> acquireByte(unsigned char value);
     std::shared_ptr<Literal> acquireBool(bool value);
     std::shared_ptr<Literal> acquireString(const std::string &value);
-    std::shared_ptr<Literal> acquirePointer(void *value);
+
 
     void release(std::shared_ptr<Literal> literal);
 
@@ -167,10 +175,12 @@ public:
 
     void clear();
 
-    static std::shared_ptr<LiteralExpr> createNumberLiteral(double value);
+    static std::shared_ptr<LiteralExpr> createIntegerLiteral(long value);
+    static std::shared_ptr<LiteralExpr> createFloatLiteral(double value);
+    static std::shared_ptr<LiteralExpr> createByteLiteral(unsigned char value);
     static std::shared_ptr<LiteralExpr> createStringLiteral(const std::string &value);
     static std::shared_ptr<LiteralExpr> createBoolLiteral(bool value);
-    static std::shared_ptr<LiteralExpr> createPointerLiteral(void *value);
+
 };
 
 class Environment
@@ -180,10 +190,10 @@ private:
     std::unordered_map<std::string, std::shared_ptr<Literal>> m_values;
 
     unsigned int m_depth;
-    std::shared_ptr<Environment> m_parent;
+    Environment *m_parent;
 
 public:
-    Environment(int depth,const std::shared_ptr<Environment> &parent = nullptr);
+    Environment(int depth, Environment *parent = nullptr);
 
     virtual ~Environment();
 
@@ -196,7 +206,9 @@ public:
     bool contains(const std::string &name);
 
     
-    bool addNumber(const std::string &name, double value);
+    bool addInteger(const std::string &name, long value);
+    bool addFloat(const std::string &name, double value);
+    bool addByte(const std::string &name, unsigned char value);
     bool addBool(const std::string &name, bool value);
     bool addString(const std::string &name, const std::string &value);
 
@@ -315,17 +327,47 @@ private:
 
     double time_elapsed();
 
-    
-    std::shared_ptr<LiteralExpr> createNumberLiteral(double value);
-    std::shared_ptr<LiteralExpr> createStringLiteral(const std::string &value);
-    std::shared_ptr<LiteralExpr> createBoolLiteral(bool value);
-    std::shared_ptr<LiteralExpr> createPointerLiteral(void *value);
+
 
     NativeFunction getNativeFunction(const std::string &name) const;
     bool isNativeFunctionDefined(const std::string &name) const;
 
-  
-   
+    std::shared_ptr<Expr> Addition(LiteralExpr *leftLiteral , LiteralExpr *rightLiteral);
+
+    std::shared_ptr<Expr> Subtraction(LiteralExpr *leftLiteral , LiteralExpr *rightLiteral);
+
+    std::shared_ptr<Expr> Multiplication(LiteralExpr *leftLiteral , LiteralExpr *rightLiteral);
+
+    std::shared_ptr<Expr> Division(LiteralExpr *leftLiteral , LiteralExpr *rightLiteral);
+
+    std::shared_ptr<Expr> Modulus(LiteralExpr *leftLiteral , LiteralExpr *rightLiteral);
+
+    std::shared_ptr<Expr> Power(LiteralExpr *leftLiteral , LiteralExpr *rightLiteral);
+    
+    std::shared_ptr<Expr> EqualEqual(LiteralExpr *leftLiteral, LiteralExpr *rightLiteral);
+
+    std::shared_ptr<Expr> NotEqual(LiteralExpr *leftLiteral, LiteralExpr *rightLiteral);
+
+    std::shared_ptr<Expr> Greater(LiteralExpr *leftLiteral, LiteralExpr *rightLiteral);
+
+    std::shared_ptr<Expr> Less(LiteralExpr *leftLiteral, LiteralExpr *rightLiteral);
+
+    std::shared_ptr<Expr> GreaterEqual(LiteralExpr *leftLiteral, LiteralExpr *rightLiteral);
+
+    std::shared_ptr<Expr> LessEqual(LiteralExpr *leftLiteral, LiteralExpr *rightLiteral);
+
+
+    std::shared_ptr<Expr> PlusEqual(LiteralExpr *leftLiteral, LiteralExpr *rightLiteral);
+    std::shared_ptr<Expr> MinusEqual(LiteralExpr *leftLiteral, LiteralExpr *rightLiteral);
+    std::shared_ptr<Expr> StarEqual(LiteralExpr *leftLiteral, LiteralExpr *rightLiteral);
+    std::shared_ptr<Expr> SlashEqual(LiteralExpr *leftLiteral, LiteralExpr *rightLiteral, const Token &op);
+
+    std::shared_ptr<Expr> handleIncrementDecrement(Literal *literal,bool isPrefix, bool isIncrement);
+
+    std::shared_ptr<Expr> ReturnByType(LiteralExpr *value);
+
+    std::shared_ptr<Expr> handleMinus(LiteralExpr *literal);
+    std::shared_ptr<Expr> handleBangNot(LiteralExpr *literal);
 
     std::unordered_map<std::string, ProcedureStmt *> procedureList;
     std::unordered_map<std::string, FunctionStmt *> functionList;

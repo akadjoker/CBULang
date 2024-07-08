@@ -6,7 +6,7 @@
 #include "Stm.hpp"
 #include <raylib.h>
 
-Process::Process(Interpreter *i,const std::string &name, unsigned int ID, BlockStmt *block, const std::shared_ptr<Environment> &global)
+Process::Process(Interpreter *i,const std::string &name, unsigned int ID, BlockStmt *block,  Environment *global)
 {
 
     this->interpreter = i;
@@ -15,10 +15,10 @@ Process::Process(Interpreter *i,const std::string &name, unsigned int ID, BlockS
     this->ID = ID;
     this->m_running = true;
     environment = std::make_shared<Environment>(ID, global);
-    environment->addNumber("id", ID);
-    environment->addNumber("graph", 0);
-    environment->addNumber("x", X);
-    environment->addNumber("y", Y);
+    environment->addInteger("id", ID);
+    environment->addInteger("graph", graph);
+    environment->addFloat("x", X);
+    environment->addFloat("y", Y);
   //  std::cout<<"Create Process("<<ID<<")"<<std::endl;
 
     state = 0;
@@ -59,6 +59,9 @@ Process::~Process()
 void Process::run()
 {
     if (!m_running)  return;
+
+    X = environment->get("x").get()->getFloat();
+    Y = environment->get("y").get()->getFloat();
    
     try
     {
@@ -69,9 +72,9 @@ void Process::run()
             for (auto &stmt : initialStatements)
             {
                 interpreter->execute(stmt);
+               
             }
-            X = environment->get("x").get()->getNumber();
-            Y = environment->get("y").get()->getNumber();
+           
 
             state = 1;
             break;
@@ -85,7 +88,13 @@ void Process::run()
                       {
                             for (auto &stmt : loopStatements)
                             {
-                                interpreter->execute(stmt);
+                                // if (stmt->getType() == StmtType::BLOCK)
+                                // {
+                                //     interpreter->executeBlock(stmt, environment);
+                                //     continue;
+                                // }
+                                interpreter->executeBlock(stmt, environment);
+                                //interpreter->execute(stmt);
                             }
                         }
                         catch (ContinueException &)
@@ -129,8 +138,8 @@ void Process::run()
 
 void Process::render()
 {
-    X = environment->get("x").get()->getNumber();
-    Y = environment->get("y").get()->getNumber();
+    X = environment->get("x").get()->getFloat();
+    Y = environment->get("y").get()->getFloat();
 
     
 

@@ -1,15 +1,14 @@
     program main;
-        process nave(number _x,number _y)
+        process nave(float _x,float _y)
         begin
+               
                 x=_x;
                 y=_y;
-                number mx =0.5;
-                number life =0;
+                float life =0;
                 loop;
                     begin 
-                        
-                        x-=1;
-
+                        x+=5;
+                
                             if (x>=800)
                             begin 
                                 x=0;
@@ -20,18 +19,47 @@
                             break;
                         end
                     end 
+                points++;    
         end
+        
+        process bala(float _x,float _y)
+        begin
+            x = _x;
+            y = _y;
+            loop
+             begin 
+             end
+        end 
+        
         process main()
         begin 
+            x=100;
+            y=200;
             
+  
+            string text="";
             loop 
-            begin 
-               if (mouse_down(0))
-               begin
-                    nave(mouse_x(),mouse_y());
-               end
-            end
+                begin 
+
+                circle(x,y,5,false);       
+           
+                if (mouse_down(0))
+                begin
+                        nave(mouse_x(),mouse_y());
+                end
+         
+                
+                text="Points: "+points;
+                text(800/2,20,16,text);
+                end
         end
     begin
-       main();//main process 
+        int points =0;
+
+        main();
+
+
+       
+        
+       
     end.

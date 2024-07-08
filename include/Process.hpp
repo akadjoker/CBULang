@@ -25,7 +25,7 @@ class Process
     friend class Interpreter;
 
 public:
-    Process(Interpreter *i,const std::string &name, unsigned int ID, BlockStmt *block,const std::shared_ptr<Environment> &environment);
+    Process(Interpreter *i,const std::string &name, unsigned int ID, BlockStmt *block, Environment *environment);
 
     virtual ~Process();
 
@@ -43,4 +43,5 @@ public:
     //LOCALS
     double X;
     double Y;
+    long graph;
 };

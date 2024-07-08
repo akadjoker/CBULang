@@ -44,8 +44,10 @@ enum class TokenType
     // Literals.
     IDENTIFIER,
     STRING,
-    NUMBER,
+    INT,
     BOOL,
+    FLOAT,
+    BYTE,
 
     // Keywords.
     OR,
@@ -70,7 +72,9 @@ enum class TokenType
     TRUE,
 
     // LITERAIL ID
-    IDNUMBER,
+    IDINT,
+    IDFLOAT,
+    IDBYTE,
     IDBOOL,
     IDSTRING,
 
@@ -139,7 +143,9 @@ inline std::string tknString(TokenType type)
         case TokenType::SLASH_EQUAL:   return "/=";
         case TokenType::IDENTIFIER:    return "IDENTIFIER";
         case TokenType::STRING:        return "STRING";
-        case TokenType::NUMBER:         return "NUMBER";
+        case TokenType::INT:         return "INT";
+        case TokenType::FLOAT:       return "FLOAT";
+        case TokenType::BYTE:        return "BYTE";
         case TokenType::BOOL:          return "BOOL";
         case TokenType::OR:            return "OR";
         case TokenType::XOR:           return "XOR";
@@ -157,7 +163,9 @@ inline std::string tknString(TokenType type)
         case TokenType::NIL:           return "NIL";
         case TokenType::FALSE:         return "FALSE";
         case TokenType::TRUE:          return "TRUE";
-        case TokenType::IDNUMBER:       return "ID_NUMBER";
+        case TokenType::IDINT:       return "ID_INT";
+        case TokenType::IDFLOAT:     return "ID_FLOAT";
+        case TokenType::IDBYTE:      return "ID_BYTE";
         case TokenType::IDBOOL:        return "ID_BOOL";
         case TokenType::IDSTRING:      return "ID_STRING";
         case TokenType::IDFUNCTION:    return "ID_FUNCTION";

@@ -369,7 +369,7 @@ std::shared_ptr<Expr> Parser::primary()
     if (match(TokenType::NIL))
     {
    
-        return LiteralPool::createNumberLiteral(0);
+        return LiteralPool::createIntegerLiteral(0);
    
     }
     if (match(TokenType::STRING))
@@ -379,11 +379,25 @@ std::shared_ptr<Expr> Parser::primary()
         return LiteralPool::createStringLiteral(value);
     }
     
-    if (match(TokenType::NUMBER))
+    if (match(TokenType::FLOAT))
     {
         double value =std::stod(previous().literal);
        
-        return LiteralPool::createNumberLiteral(value);
+        return LiteralPool::createFloatLiteral(value);
+    }
+
+    if (match(TokenType::INT))
+    {
+        int value = std::stoi(previous().literal);
+       
+        return LiteralPool::createIntegerLiteral(value);
+    }
+
+    if (match(TokenType::BYTE))
+    {
+        int value = std::stoi(previous().literal);
+       
+        return LiteralPool::createByteLiteral(value);
     }
 
   
@@ -533,7 +547,7 @@ std::shared_ptr<ForStmt> Parser::forStmt()
     {
         Error(peek(),"Missing 'for' initializer."); 
     }else 
-    if (match({TokenType::NUMBER}))
+    if (match({TokenType::IDINT,TokenType::IDFLOAT,TokenType::IDBYTE,TokenType::IDENTIFIER}))
     {
         initializer = declaration();
     }
@@ -693,15 +707,29 @@ std::shared_ptr<FunctionStmt> Parser::functionStmt()
         {
             
            
-            if (match(TokenType::IDNUMBER))
+            if (match(TokenType::IDINT))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
                     
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createNumberLiteral(MAXFLOAT);
+                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createIntegerLiteral(INTMAX_MAX);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
 
             } else 
+            if (match(TokenType::IDFLOAT))
+            {
+                    Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
+                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createFloatLiteral(MAXFLOAT);
+                    std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
+                    parameter.push_back(arg);
+            } else
+            if (match(TokenType::IDBYTE))
+            {
+                    Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
+                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createByteLiteral(0);
+                    std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
+                    parameter.push_back(arg);
+            } else
             if (match(TokenType::IDSTRING))
             {
                 Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
@@ -726,10 +754,18 @@ std::shared_ptr<FunctionStmt> Parser::functionStmt()
     consume(TokenType::COLON,"Expect ':' after function arguments."); 
 
      
-    if (match(TokenType::IDNUMBER))
+    if (match(TokenType::IDINT))
     {
-        returnType = LiteralType::NUMBER;
+        returnType = LiteralType::INT;
     } else 
+    if (match(TokenType::IDFLOAT))
+    {
+        returnType = LiteralType::FLOAT;
+    } else 
+    if (match(TokenType::IDBYTE))
+    {
+        returnType = LiteralType::BYTE;
+    } else
     if (match(TokenType::IDSTRING))
     {
         returnType = LiteralType::STRING;
@@ -771,15 +807,27 @@ std::shared_ptr<ProcedureStmt> Parser::procedureStmt()
         {
             
           
-            if (match(TokenType::IDNUMBER))
+            if (match(TokenType::IDINT))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
                     
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createNumberLiteral(MAXFLOAT);
+                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createIntegerLiteral(INTMAX_MAX);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
 
-            } else 
+            } else if (match(TokenType::IDFLOAT))
+            {
+                    Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
+                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createFloatLiteral(MAXFLOAT);
+                    std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
+                    parameter.push_back(arg);
+            }  else if (match(TokenType::IDBYTE))
+            {
+                    Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
+                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createByteLiteral(0);
+                    std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
+                    parameter.push_back(arg);
+            }else 
             if (match(TokenType::IDSTRING))
             {
                 Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
@@ -877,15 +925,28 @@ std::shared_ptr<ProcessStmt> Parser::processStmt()
         {
             
             
-            if (match(TokenType::IDNUMBER))
+            if (match(TokenType::IDINT))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
                     
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createNumberLiteral(MAXFLOAT);
+                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createIntegerLiteral(INTMAX_MAX);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
 
-            } else 
+            } else if (match(TokenType::IDFLOAT))
+            {
+                    Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
+                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createFloatLiteral(0.0);
+                    std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
+                    parameter.push_back(arg);
+            }else 
+            if (match(TokenType::IDBYTE))
+            {
+                    Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
+                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createByteLiteral(0);
+                    std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
+                    parameter.push_back(arg);
+            }else
             if (match(TokenType::IDSTRING))
             {
                 Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
@@ -981,10 +1042,18 @@ std::shared_ptr<Stmt> Parser::declaration()
 {
 
    
-    if (match(TokenType::IDNUMBER))
+    if (match(TokenType::IDINT))
     {
-        return varDeclaration(LiteralType::NUMBER);
+        return varDeclaration(LiteralType::INT);
     } else 
+    if (match(TokenType::IDFLOAT))
+    {
+        return varDeclaration(LiteralType::FLOAT);
+    } else 
+    if (match(TokenType::IDBYTE))
+    {
+        return varDeclaration(LiteralType::BYTE);
+    }else 
     if (match(TokenType::IDSTRING))
     {
         return varDeclaration(LiteralType::STRING);
@@ -1044,10 +1113,18 @@ std::shared_ptr<VarStmt> Parser::varDeclaration(LiteralType type)
         } else 
         { 
 
-            if (type == LiteralType::NUMBER)
+            if (type == LiteralType::INT)
             {
-                initializer = LiteralPool::Instance().createNumberLiteral(INT32_MAX);
+                initializer = LiteralPool::Instance().createIntegerLiteral(INT32_MAX);
             } else 
+            if (type == LiteralType::FLOAT)
+            {
+                initializer = LiteralPool::Instance().createFloatLiteral(MAXFLOAT);
+            } else 
+            if (type == LiteralType::BYTE)
+            {
+                initializer = LiteralPool::Instance().createByteLiteral(0);
+            } else
             if (type == LiteralType::STRING)
             {
                 initializer =LiteralPool::Instance().createStringLiteral("NULL");

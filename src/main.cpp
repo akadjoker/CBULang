@@ -8,6 +8,10 @@
 #include "Utils.hpp"
 #include "raylib.h"
 
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
 std::string readFile(const std::string& filePath)
 {
     std::ifstream file(filePath);
@@ -34,10 +38,20 @@ LiteralPtr native_writeln(ExecutionContext* ctx, int argc, LiteralList* argv)
             {
                 std::cout << argv[i]->getString();
             }
-            else if (ctx->isNumber(argv[i]))
+            else if (ctx->isInt(argv[i]))
             {
-                std::cout << argv[i]->getNumber();
-            } else 
+                std::cout << argv[i]->getInt();}
+            else if (ctx->isFloat(argv[i]))
+            {
+                std::cout << argv[i]->getFloat();
+            } else if (ctx->isBool(argv[i]))
+            {
+                std::cout << argv[i]->getBool();
+            } else if (ctx->isByte(argv[i]))
+            {
+                std::cout << argv[i]->getByte();
+            } 
+            else 
             {
                 std::cout << argv[i]->toString();
             }
@@ -70,12 +84,12 @@ LiteralPtr native_mouse_pressed(ExecutionContext* ctx, int argc, LiteralList* ar
 
 LiteralPtr native_mouse_x(ExecutionContext* ctx, int argc, LiteralList* argv) 
 {
-    return ctx->asFloat(GetMouseX());
+    return ctx->asFloat((float)GetMouseX());
 }
 
 LiteralPtr native_mouse_y(ExecutionContext* ctx, int argc, LiteralList* argv) 
 {
-    return ctx->asFloat(GetMouseY());
+    return ctx->asFloat((float)GetMouseY());
 }
 
 LiteralPtr native_circle(ExecutionContext* ctx, int argc, LiteralList* argv) 
@@ -106,6 +120,26 @@ LiteralPtr native_circle(ExecutionContext* ctx, int argc, LiteralList* argv)
     return ctx->asBool(true);
 }
 
+LiteralPtr native_text(ExecutionContext* ctx, int argc, LiteralList* argv) 
+{
+
+    if (argc != 4)
+    {
+        ctx->Error("Usage: text(x, y, size, string)"+std::to_string(argc));   
+        return ctx->asBool(false);
+    }
+     int x = argv[0]->getInt();
+     int y = argv[1]->getInt();
+     int radius = argv[2]->getInt();
+     std::string text = argv[3]->getString();
+
+     DrawText(text.c_str(), x, y, radius, RED);
+    
+    return ctx->asBool(true);
+}
+
+
+
 int main()
 {
 static const NativeFuncDef native_funcs[] = {
@@ -115,6 +149,7 @@ static const NativeFuncDef native_funcs[] = {
     {"mouse_x", native_mouse_x},
     {"mouse_y", native_mouse_y},
     {"circle", native_circle},
+    {"text", native_text},
     {NULL, NULL}
 };
 

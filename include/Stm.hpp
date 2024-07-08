@@ -48,52 +48,52 @@ struct Stmt
         switch (getType())
         {
         case EMPTY_STMT:
-            return "Empty: "+ std::to_string(ID);
+            return "Empty";
         case BLOCK:
-            return "Block: "+ std::to_string(ID);
+            return "Block";
         case CLASS:
-            return "Class: "+ std::to_string(ID);
+            return "Class";
         case EXPRESSION:
-            return "Expression: "+ std::to_string(ID);
+            return "Expression";
         case FUNCTION:
-            return "Function: "+ std::to_string(ID);
+            return "Function";
         case PROCEDURE:
-            return "Procedure: "+ std::to_string(ID);
+            return "Procedure";
         case PROCESS:
-            return "Process: "+ std::to_string(ID);
+            return "Process";
         case IF:
-            return "If: "+ std::to_string(ID);
+            return "If";
         case ELIF:
-            return "Elif: "+ std::to_string(ID);
+            return "Elif";
         case PRINT:
-            return "Print: "+ std::to_string(ID);
+            return "Print";
         case RETURN:
-            return "Return: "+ std::to_string(ID);
+            return "Return";
         case VAR:
-            return "Var: "+ std::to_string(ID);
+            return "Var";
         case WHILE:
-            return "While: "+ std::to_string(ID);
+            return "While";
         case FOR:
-            return "For: "+ std::to_string(ID);
+            return "For";
         case REPEAT:
-            return "Repeat: "+ std::to_string(ID);
+            return "Repeat";
         case LOOP:
-            return "Loop: "+ std::to_string(ID);
+            return "Loop";
         case SWITCH:
-            return "Switch: "+ std::to_string(ID);
+            return "Switch";
         case CONTINUE:
-            return "Continue: "+ std::to_string(ID);
+            return "Continue";
         case BREAK:
-            return "Break: "+ std::to_string(ID);
+            return "Break";
         case PROGRAM:
-            return "Program: "+ std::to_string(ID);
+            return "Program";
         case STMTCALL:
-            return "StmtCall: "+ std::to_string(ID);
+            return "StmtCall";
         case PROCEDURECALL:
-            return "ProcedureCall: "+ std::to_string(ID);
+            return "ProcedureCall";
 
         default:
-            return "Unknown: "+ std::to_string(ID);
+            return "Unknown";
         }
     }
 };

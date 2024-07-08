@@ -7,81 +7,72 @@
 enum LiteralType
 {
     STRING,
-    NUMBER,
-    BOOLEAN
+    INT,
+    FLOAT, 
+    BYTE,
+    BOOLEAN,
+    UNDEFINED
 };
 
 class Literal
 {
 private:
     LiteralType type;
-      union Value
-    {
-        bool boolValue;
-        double numberValue;
-        char *stringValue;
+     using LiteralValue = std::variant<double, long, bool, unsigned char, std::string>;
+     LiteralValue value;
 
-        Value();
-        ~Value();
-    } value;
 
-    std::string ltString(LiteralType type) const
-    {
-        switch (type)
-        {
-        case STRING:
-            return "String";
-        case NUMBER:
-            return "Number";
-        case BOOLEAN:
-            return "Boolean";
-        }
-        return "";
-    }
-
-    Literal(const Literal &other);
-    Literal &operator=(const Literal &other);
-    void copyValue(const Literal &other);
 public:
     Literal();
-    Literal(bool bvalue);
-    Literal(double fvalue);
-    Literal(const char *stringValue);
-   
-    virtual ~Literal();
+    Literal(long v);
+    Literal(double v);
+    Literal(bool v);
+    Literal(unsigned char v);
+    Literal(const std::string &v);
 
-  
 
-    std::string toString() const;
+ 
+    std::string     getString() const;
+    double          getFloat() const;
+    bool            getBool() const;
+    unsigned char   getByte() const;
+    long            getInt() const;
+
+    void setString(const std::string &v);
+    void setFloat(const double &v);
+    void setBool(const bool &v);
+    void setByte(const unsigned char &v);
+    void setInt(const long &v);
+
+    bool isTruthy() const;
+    bool isEqual(const Literal &other) const;
+    bool isEqual( Literal *other) const;
+
+    bool isInt() const { return type == INT; }
+    bool isFloat() const { return type == FLOAT; }
+    bool isByte() const { return type == BYTE; }
+    bool isBool() const { return type == BOOLEAN; }
+    bool isString() const { return type == STRING; }
+    
+
+    long            asInt() const;
+    std::string     asString() const;
+    bool            asBool() const;
+    unsigned char   asByte() const;
+    double          asFloat() const;
+
+    bool assign(const Literal &other);
+    bool assign(Literal *other);
+
+    void print();
 
     LiteralType getType() const { return type; }
 
-    char *getString() const;
-    double getNumber() const;
-    bool  getBool() const;
-    int   getInt() const;
-    float geFloat() const;
-    
-    void setString(const char *stringValue);
-    void setNumber(double value);
-    void setBool(bool value);
 
-    bool isTrue() const;
-    bool isEqual(const Literal *other) const;
-
-    bool isNumber() const;
-    bool isBool() const;
-    bool isString() const;
-    
-    bool copyFrom(const Literal *other);
-
-    void clear();
-
-
-
-
-    
+    std::string toString() const;
 };
+
+
 using LiteralPtr = std::shared_ptr<Literal>;
 
 class List 

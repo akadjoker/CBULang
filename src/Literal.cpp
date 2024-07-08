@@ -4,238 +4,8 @@
 #include "Utils.hpp"
 
 
-Literal::Value::Value() 
-{
-    stringValue=nullptr;
-}
-
-Literal::Value::~Value() {}
-
-Literal::~Literal()
-{
-    
-//Log(0, "Delete Literal: %s", toString().c_str());
-clear();
-
-}
-
-void Literal::clear()
-{
-    if (type == STRING)
-    {
-        std::free(value.stringValue);
-        value.stringValue = nullptr;
-    }
-}
 
 
-bool Literal::isTrue() const
-{
-    
-    if (type == NUMBER)
-        return value.numberValue != 0.0;
-    else if (type == BOOLEAN)
-        return value.boolValue;
-    else if (type == STRING)
-        return value.stringValue != nullptr;
-    
-    return false;
-}
-
-bool Literal::isEqual(const Literal *other) const
-{
-
-    if (type != other->type)
-        return false;
-    if (type == LiteralType::STRING)
-        return value.stringValue == other->value.stringValue;
-    else if (type == LiteralType::NUMBER)
-        return value.numberValue == other->value.numberValue;
-    else if (type == LiteralType::BOOLEAN)
-        return value.boolValue == other->value.boolValue;
-    return false;
-}
-
-
-bool Literal::isNumber() const
-{
-    return type == LiteralType::NUMBER;
-}
-
-bool Literal::isBool() const
-{
-    return type == LiteralType::STRING;
-}
-
-Literal::Literal(const Literal &other) : type(other.type)
-{
-    copyValue(other);
-}
-
-Literal &Literal::operator=(const Literal &other)
-{
-    if (this != &other)
-    {
-        clear();
-        type = other.type;
-        copyValue(other);
-    }
-    return *this;
-}
-
-void Literal::copyValue(const Literal &other)
-{
-
- //  Log(0, "Copy Literal: %s", other.toString().c_str());
-
-    switch (other.type)
-    {
-    case LiteralType::BOOLEAN:
-        value.boolValue = other.value.boolValue;
-        break;
-    case LiteralType::NUMBER:
-        value.numberValue = other.value.numberValue;
-        break;
-    case LiteralType::STRING:
-        {
-            if (value.stringValue != nullptr )
-            {
-                std::free(value.stringValue);
-            }
-            if (other.value.stringValue != nullptr)
-                    value.stringValue = strdup(other.value.stringValue);
-            else
-                    value.stringValue = strdup("NULL");
-            
-        }
-        break;
-        }
-}
-
-
-
-std::string Literal::toString() const
-{
-
-
-    switch (type)
-    {
-        case STRING:
-        {
-            if (value.stringValue == nullptr)
-                return "String: null";
-            return "String: " + std::string(value.stringValue);
-        }
-        case NUMBER:
-            return "number: " + std::to_string(value.numberValue);
-        case BOOLEAN:
-        {
-            if (value.boolValue)
-                return "Boolean: true";
-
-            return "Boolean: false";
-        }
-    }
-    return "Unknown";
-}
-
-Literal::Literal()
-{
-    type = NUMBER;
-    value.numberValue = 0.0;
-}
-
-
-Literal::Literal(double value)
-{
-    type = NUMBER;
-    this->value.numberValue = value;
-}
-
-Literal::Literal(bool value)
-{
-    type = BOOLEAN;
-    this->value.boolValue = value;
-}
-
-Literal::Literal(const char *stringValue)
-{
-
-    type = STRING;
-    if (stringValue == nullptr)
-    {
-        value.stringValue = strdup("NULL");
-        return;
-    }
-    
-    value.stringValue = strdup(stringValue);
-    
-}
-
-
-char *Literal::getString() const
-{
-    if (type != STRING)
-    {
-        std::cout << "Invalid string literal type" << std::endl;
-        return nullptr;
-    }
-  
-    return value.stringValue;
-}
-
-
-double Literal::getNumber() const
-{
-   
-    return value.numberValue;
-}
-
-bool Literal::getBool() const
-{
-    return value.boolValue;
-}
-
-int Literal::getInt() const
-{
-    int result = (int)value.numberValue;
-    return result;
-}
-
-float Literal::geFloat() const
-{
-    float result = (float)value.numberValue;
-    return result;
-}
-
-void Literal::setString(const char *stringValue)
-{
-   
-    type = STRING;
-    if (value.stringValue != nullptr)
-    {
-        std::free(value.stringValue);
-    }
-    value.stringValue = strdup(stringValue);
-}
-
-void Literal::setNumber(double value)
-{
-    type = NUMBER;
-    this->value.numberValue = value;
-}
-
-bool Literal::copyFrom(const Literal *other)
-{
-    if (!other)
-    {
-        return false;
-    }
-    type = other->type;
-    copyValue(*other);
-    return true;
-    
-}
 
 List::List(LiteralType type)
 {
@@ -285,7 +55,8 @@ LiteralPtr List::pop()
     elements.pop_back();
     return ret;
 }
-
+///////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////
 Map::Map(LiteralType type)
 {
     this->type = type;
@@ -319,4 +90,512 @@ bool Map::remove(const std::string &key)
 bool Map::contains(const std::string &key)
 {
     return entries.find(key) != entries.end();
+}
+
+Literal::Literal()
+{
+    type = UNDEFINED;
+    value = 0;
+}
+
+///////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////
+
+Literal::Literal(long v)
+{
+    type = INT;
+    value = v;
+}
+
+Literal::Literal(double v)
+{
+    type = FLOAT;
+    value = v;
+}
+
+Literal::Literal(bool v)
+{
+    type = BOOLEAN;
+    value = v;
+}
+
+Literal::Literal(unsigned char v)
+{
+    type = BYTE;
+    value = v;
+}
+
+Literal::Literal(const std::string &v)
+{
+    type = STRING;
+    value = v;
+}
+
+
+
+std::string Literal::getString() const
+{
+    if (type == STRING)
+        return std::get<std::string>(value);
+    return "null";
+}
+
+double Literal::getFloat() const
+{
+    if (type == FLOAT)
+        return std::get<double>(value);
+    return 0.0;
+}
+
+bool Literal::getBool() const
+{
+    if (type == BOOLEAN)
+        return std::get<bool>(value);
+    return false;
+}
+
+unsigned char Literal::getByte() const
+{
+    if (type == BYTE)
+        return std::get<unsigned char>(value);
+    return 0;
+   
+}
+
+long Literal::getInt() const
+{
+    if (type == INT)
+        return std::get<long>(value);
+    return 0;
+    
+}
+
+void Literal::setString(const std::string &v)
+{
+    if (type == STRING)
+        value = v;
+    else
+    {
+        if (type == INT)
+            value = static_cast<long>(std::stol(v)); 
+        if (type == FLOAT)
+            value = static_cast<double>(std::stold(v));
+        if (type == BYTE)
+            value =  static_cast<unsigned char>(std::stoul(v));
+        if (type == BOOLEAN)
+            value = static_cast<bool>(std::stoi(v));
+    }
+}
+
+void Literal::setFloat(const double &v)
+{
+    if (type == FLOAT)
+        value = v;
+    else
+    {
+        if (type == INT)
+            value = static_cast<double>(v);
+        if (type == BOOLEAN)
+            value = static_cast<bool>(v);
+        if (type == BYTE)
+            value =  static_cast<unsigned char>(v);
+        if (type == STRING)
+            value = std::to_string(v);
+            
+    }
+}
+
+void Literal::setBool(const bool &v)
+{
+    if (type == BOOLEAN)
+        value = v;
+    else
+    {
+        if (type == INT)
+            value = static_cast<long>(v);
+        if (type == FLOAT)
+            value = static_cast<double>(v);
+        if (type == BYTE)
+            value =  static_cast<unsigned char>(v);
+        if (type == STRING)
+            value = std::to_string(v);
+    }
+}
+
+void Literal::setByte(const unsigned char &v)
+{
+    if (type == BYTE)
+        value = v;
+    else
+    {
+        if (type == INT)
+            value = static_cast<long>(v);
+        if (type == FLOAT)
+            value = static_cast<double>(v);
+        if (type == BOOLEAN)
+            value = static_cast<bool>(v);
+        if (type == STRING)
+            value = std::to_string(v);
+    }
+}
+
+void Literal::setInt(const long &v)
+{
+    if (type == INT)
+        value = v;
+    else
+    {
+        if (type == FLOAT)
+            value = static_cast<double>(v);
+        if (type == BOOLEAN)
+            value = static_cast<bool>(v);
+        if (type == BYTE)
+            value =  static_cast<unsigned char>(v);
+        if (type == STRING)
+            value = std::to_string(v);
+    }
+}
+
+bool Literal::isTruthy() const
+{
+    if (type == BOOLEAN)
+        return std::get<bool>(value);
+    if (type == INT)
+        return std::get<long>(value) != 0;
+    if (type == FLOAT)
+        return std::get<double>(value) != 0.0;
+    if (type == BYTE)
+        return std::get<unsigned char>(value) != 0;
+    if (type == STRING)
+        return std::get<std::string>(value) != "";
+    return false;
+}
+
+bool Literal::isEqual(const Literal &other) const
+{
+    if (type == other.type)
+    {
+        if (type == INT)
+            return std::get<long>(value) == std::get<long>(other.value);
+        if (type == FLOAT)
+            return std::get<double>(value) == std::get<double>(other.value);
+        if (type == BYTE)
+            return std::get<unsigned char>(value) == std::get<unsigned char>(other.value);
+        if (type == BOOLEAN)
+            return std::get<bool>(value) == std::get<bool>(other.value);
+        if (type == STRING)
+            return std::get<std::string>(value) == std::get<std::string>(other.value);
+    } else 
+    {
+        if (type == INT && other.type == FLOAT)
+            return static_cast<double>(std::get<long>(value)) == std::get<double>(other.value);
+        if (type == FLOAT && other.type == INT)
+            return std::get<double>(value) == static_cast<double>(std::get<long>(other.value));
+        if (type == INT && other.type == BYTE)
+            return static_cast<unsigned char>(std::get<long>(value)) == std::get<unsigned char>(other.value);
+        if (type == BYTE && other.type == INT)
+            return std::get<unsigned char>(value) == static_cast<unsigned char>(std::get<long>(other.value));
+        if (type == INT && other.type == BOOLEAN)
+            return static_cast<bool>(std::get<long>(value)) == std::get<bool>(other.value);
+        if (type == BOOLEAN && other.type == INT)
+            return std::get<bool>(value) == static_cast<bool>(std::get<long>(other.value)); 
+         
+    }
+    return false;
+}
+
+bool Literal::isEqual(Literal *other) const
+{
+    return isEqual(*other);
+}
+
+long Literal::asInt() const
+{
+    if (type == INT)
+        return std::get<long>(value);
+    if (type == FLOAT)
+        return static_cast<long>(std::get<double>(value));
+    if (type == BYTE)
+        return static_cast<long>(std::get<unsigned char>(value));
+    if (type == BOOLEAN)
+        return static_cast<long>(std::get<bool>(value));
+    return 0;
+}
+
+double Literal::asFloat() const
+{
+    if (type == INT)
+        return static_cast<double>(std::get<long>(value));
+    if (type == FLOAT)
+        return std::get<double>(value);
+    if (type == BYTE)
+        return static_cast<double>(std::get<unsigned char>(value));
+    if (type == BOOLEAN)
+        return static_cast<double>(std::get<bool>(value));
+    return 0.0;
+}
+
+bool Literal::assign(const Literal &other)
+{
+
+
+    auto otherType = other.getType();
+
+    // Handle assignment between the same types
+    if (type == otherType)
+    {
+        value = other.value;
+        return true;
+    }
+
+    // Handle conversions between different types
+    if (type == INT)
+    {
+        if (otherType == FLOAT)
+        {
+            value = static_cast<long>(other.getFloat());
+            return true;
+        }
+        if (otherType == BYTE)
+        {
+            value = static_cast<long>(other.getByte());
+            return true;
+        }
+        if (otherType == BOOLEAN)
+        {
+            value = static_cast<long>(other.getBool());
+            return true;
+        }
+    }
+    else if (type == FLOAT)
+    {
+        if (otherType == INT)
+        {
+            value = static_cast<double>(other.getInt());
+            return true;
+        }
+        if (otherType == BYTE)
+        {
+            value = static_cast<double>(other.getByte());
+            return true;
+        }
+        if (otherType == BOOLEAN)
+        {
+            value = static_cast<double>(other.getBool());
+            return true;
+        }
+    }
+    else if (type == BYTE)
+    {
+        if (otherType == INT)
+        {
+            value = static_cast<unsigned char>(other.getInt());
+            return true;
+        }
+        if (otherType == FLOAT)
+        {
+            value = static_cast<unsigned char>(other.getFloat());
+            return true;
+        }
+        if (otherType == BOOLEAN)
+        {
+            value = static_cast<unsigned char>(other.getBool());
+            return true;
+        }
+    }
+    else if (type == BOOLEAN)
+    {
+        if (otherType == INT)
+        {
+            value = static_cast<bool>(other.getInt());
+            return true;
+        }
+        if (otherType == FLOAT)
+        {
+            value = static_cast<bool>(other.getFloat());
+            return true;
+        }
+        if (otherType == BYTE)
+        {
+            value = static_cast<bool>(other.getByte());
+            return true;
+        }
+    }
+
+    Log(2, "Literal::assign: unsupported type conversion");
+    return false;
+}
+
+
+
+
+bool Literal::assign(Literal *other)
+{
+    if (!other)
+    {
+        Log(2, "Literal::assign: other is null");
+        return false;
+    }
+
+    auto otherType = other->getType();
+
+    // Handle assignment between the same types
+    if (type == otherType)
+    {
+        value = other->value;
+        return true;
+    }
+
+    // Handle conversions between different types
+    if (type == INT)
+    {
+        if (otherType == FLOAT)
+        {
+            value = static_cast<long>(other->getFloat());
+            return true;
+        }
+        if (otherType == BYTE)
+        {
+            value = static_cast<long>(other->getByte());
+            return true;
+        }
+        if (otherType == BOOLEAN)
+        {
+            value = static_cast<long>(other->getBool());
+            return true;
+        }
+    }
+    else if (type == FLOAT)
+    {
+        if (otherType == INT)
+        {
+            value = static_cast<double>(other->getInt());
+            return true;
+        }
+        if (otherType == BYTE)
+        {
+            value = static_cast<double>(other->getByte());
+            return true;
+        }
+        if (otherType == BOOLEAN)
+        {
+            value = static_cast<double>(other->getBool());
+            return true;
+        }
+    }
+    else if (type == BYTE)
+    {
+        if (otherType == INT)
+        {
+            value = static_cast<unsigned char>(other->getInt());
+            return true;
+        }
+        if (otherType == FLOAT)
+        {
+            value = static_cast<unsigned char>(other->getFloat());
+            return true;
+        }
+        if (otherType == BOOLEAN)
+        {
+            value = static_cast<unsigned char>(other->getBool());
+            return true;
+        }
+    }
+    else if (type == BOOLEAN)
+    {
+        if (otherType == INT)
+        {
+            value = static_cast<bool>(other->getInt());
+            return true;
+        }
+        if (otherType == FLOAT)
+        {
+            value = static_cast<bool>(other->getFloat());
+            return true;
+        }
+        if (otherType == BYTE)
+        {
+            value = static_cast<bool>(other->getByte());
+            return true;
+        }
+    }
+
+    Log(2, "Literal::assign: unsupported type conversion ");
+    return false;
+}
+
+    
+
+
+void Literal::print()
+{
+    if (type == INT)
+        Log(3, "%ld", std::get<long>(value));
+    if (type == FLOAT)
+        Log(3, "%f", std::get<double>(value));
+    if (type == BYTE)
+        Log(3, "%u", std::get<unsigned char>(value));
+    if (type == BOOLEAN)
+        Log(3, "%s", std::get<bool>(value) ? "true" : "false");
+    if (type == STRING)
+        Log(3, "%s", std::get<std::string>(value).c_str());
+
+}
+
+unsigned char Literal::asByte() const
+{
+    if (type == INT)
+        return static_cast<unsigned char>(std::get<long>(value));
+    if (type == FLOAT)
+        return static_cast<unsigned char>(std::get<double>(value));
+    if (type == BYTE)
+        return std::get<unsigned char>(value);
+    if (type == BOOLEAN)
+        return static_cast<unsigned char>(std::get<bool>(value));
+    return 0;
+}
+
+bool Literal::asBool() const
+{
+    if (type == INT)
+        return std::get<long>(value) != 0;
+    if (type == FLOAT)
+        return std::get<double>(value) != 0.0;
+    if (type == BYTE)
+        return std::get<unsigned char>(value) != 0;
+    if (type == BOOLEAN)
+        return std::get<bool>(value);
+    return false;
+}
+
+std::string Literal::asString() const
+{
+    if (type == STRING)
+        return std::get<std::string>(value);
+    if (type == INT)
+        return std::to_string(std::get<long>(value));
+    if (type == FLOAT)
+        return std::to_string(std::get<double>(value));
+    if (type == BYTE)
+        return std::to_string(std::get<unsigned char>(value));
+    if (type == BOOLEAN)
+        return std::to_string(std::get<bool>(value));
+    return "null";
+}
+
+
+std::string Literal::toString() const
+{
+    if (type == INT)
+        return "INT: "+std::to_string(std::get<long>(value));
+    if (type == FLOAT)
+        return "FLOAT: "+std::to_string(std::get<double>(value));
+    if (type == BYTE)
+        return "BYTE: "+std::to_string(std::get<unsigned char>(value));
+    if (type == BOOLEAN)
+        return "BOOLEAN: "+std::to_string(std::get<bool>(value));
+    if (type == STRING)
+        return "STRING: "+std::get<std::string>(value);
+    return "LITERAL UNKNOWN";  
 }
