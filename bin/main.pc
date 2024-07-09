@@ -73,48 +73,18 @@
                 end
         end
 
-        function fibonacci(int n): int
-            begin
-                if (n <= 1)
-                    return n;
-                else
-                    return fibonacci(n - 1) + fibonacci(n - 2);
-            end
-            
 
-        function teste(int value):int 
-        begin
-            print(value); 
-           
-            return value;
-        end
 
   
     begin
-         int points;
-         float state;
-
-
+        int points=0;
+       
          main(); 
 
-         
-        bala(5,5);
 
-/*
-        int count=0;
-       
-        while(count<30)
-        begin
-            int fib =0;
-            
-             fib = fibonacci(count);
 
-             print(fib);
-            
-            count = count + 1;
-        end
-  
-*/
+
+
 
 
     end.
