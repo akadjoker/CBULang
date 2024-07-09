@@ -25,7 +25,7 @@ add_compile_options(
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-
+add_subdirectory(external/raylib)
 
 file(GLOB SOURCES "src/*.cpp")
 add_executable(main   ${SOURCES})
@@ -44,4 +44,13 @@ elseif(CMAKE_BUILD_TYPE MATCHES Release)
     target_link_options(main PRIVATE -O3 -march=native -flto -funroll-loops -DNDEBUG)
 endif()
 
-target_link_libraries(main PRIVATE raylib)
+target_link_libraries(main raylib)
+
+if (WIN32)
+    target_link_libraries(my_project Winmm.lib)
+endif()
+
+
+if (UNIX)
+    target_link_libraries(main m pthread dl)
+endif()

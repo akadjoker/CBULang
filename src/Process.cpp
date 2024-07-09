@@ -5,12 +5,9 @@
 #include "Utils.hpp"
 #include "Stm.hpp"
 
-#define USE_RAYLIB
-//#undef USE_RAYLIB
 
-#ifdef USE_RAYLIB
 #include <raylib.h>
-#endif
+
 
 Process::Process(Interpreter *i,const std::string &name, long ID, BlockStmt *block)
 {
@@ -160,11 +157,9 @@ void Process::render()
 
    // environment->print();
 
-   #ifdef USE_RAYLIB
-
+  
     DrawCircle(X, Y, 10, RED);
 
-   #endif
 
 }
 

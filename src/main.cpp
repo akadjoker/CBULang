@@ -7,36 +7,8 @@
 #include "Interpreter.hpp"
 #include "Utils.hpp"
 
-#define USE_RAYLIB
-//#undef USE_RAYLIB
-
-#ifdef USE_RAYLIB
 #include <raylib.h>
-#else
-int IsMouseButtonDown(int button) { return false; }
-int IsMouseButtonPressed(int button) { return false; }
-int IsMouseButtonReleased(int button) { return false; }
-int IsMouseButtonUp(int button) { return false; }
-int GetMouseX() { return 0; }
-int GetMouseY() { return 0; }
 
-struct Color
-{
-    unsigned char r;
-    unsigned char g;
-    unsigned char b;
-    unsigned char a;
-};
-
-Color WHITE = {255, 255, 255, 255}; 
-Color RED = {255, 0, 0, 255};
-Color BLUE = {0, 0, 255, 255};
-
-void DrawCircle(int x, int y, int radius, Color color) {}
-
-void DrawText(const char *text, int x, int y, int fontSize, Color color) {}
-
-#endif
 
 #include <iostream>
 #include <fstream>
@@ -208,7 +180,7 @@ static const NativeFuncDef native_funcs[] = {
             if (program)
             {
 
-#ifdef USE_RAYLIB
+
 
             const int screenWidth = 800;
             const int screenHeight = 450;
@@ -241,11 +213,7 @@ static const NativeFuncDef native_funcs[] = {
          
             
          
-        #else
-                interpreter.build(program);
-                interpreter.run();
-         
-        #endif
+     
          
     }
          
@@ -265,9 +233,9 @@ catch (const std::runtime_error& e)
 
 Factory::Instance().clear();
 
-#ifdef USE_RAYLIB
+
  CloseWindow(); 
-#endif
+
             
 
 return 0;
