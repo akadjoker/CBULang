@@ -60,8 +60,8 @@ void Process::run()
 {
     if (!m_running)  return;
 
-    X = environment->get("x").get()->getFloat();
-    Y = environment->get("y").get()->getFloat();
+    X = environment->get("x")->getFloat();
+    Y = environment->get("y")->getFloat();
    
     try
     {
@@ -138,15 +138,20 @@ void Process::run()
 
 void Process::render()
 {
-    X = environment->get("x").get()->getFloat();
-    Y = environment->get("y").get()->getFloat();
+    X = environment->get("x")->getFloat();
+    Y = environment->get("y")->getFloat();
 
-    
+   // environment->print();
+
+   #ifdef USE_RAYLIB
 
     DrawCircle(X, Y, 10, RED);
+
+   #endif
+
 }
 
-bool Process::define(const std::string &name, const std::shared_ptr<Literal> &value)
+bool Process::define(const std::string &name, const Literal &value)
 {
     return this->environment->define(name, value);
 }

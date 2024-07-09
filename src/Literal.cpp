@@ -7,100 +7,104 @@
 
 
 
-List::List(LiteralType type)
-{
-    this->type = type;
-}
+// List::List(LiteralType type)
+// {
+//     this->type = type;
+// }
 
-void List::add(const LiteralPtr &element)
-{
-    if (element == nullptr )        return;
-    elements.push_back(element);
-}
+// void List::add(const LiteralPtr &element)
+// {
+//     if (element == nullptr )        return;
+//     elements.push_back(element);
+// }
 
-LiteralPtr List::get(size_t index)
-{
-    if (index >= elements.size())
-        return nullptr;
-    return elements[index];
-}
+// LiteralPtr List::get(size_t index)
+// {
+//     if (index >= elements.size())
+//         return nullptr;
+//     return elements[index];
+// }
 
-void List::set(size_t index, LiteralPtr element)
-{
-    if (index >= elements.size())
-        return;
-    elements[index] = element;
-}
+// void List::set(size_t index, LiteralPtr element)
+// {
+//     if (index >= elements.size())
+//         return;
+//     elements[index] = element;
+// }
 
-void List::clear()
-{
-    elements.clear();
-}
+// void List::clear()
+// {
+//     elements.clear();
+// }
 
-bool List::remove(size_t index)
-{
-    if (index >= elements.size())
-        return false;
-    elements.erase(elements.begin() + index);
-    return true;
-}
+// bool List::remove(size_t index)
+// {
+//     if (index >= elements.size())
+//         return false;
+//     elements.erase(elements.begin() + index);
+//     return true;
+// }
 
 
 
-LiteralPtr List::pop()
-{
-    if (elements.size() == 0)
-        return nullptr;
-    LiteralPtr ret = elements.back();
-    elements.pop_back();
-    return ret;
-}
+// LiteralPtr List::pop()
+// {
+//     if (elements.size() == 0)
+//         return nullptr;
+//     LiteralPtr ret = elements.back();
+//     elements.pop_back();
+//     return ret;
+// }
+// ///////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////
+// Map::Map(LiteralType type)
+// {
+//     this->type = type;
+// }
+
+// void Map::set(const std::string &key, const LiteralPtr &value)
+// {
+//     entries[key] = value;
+// }
+
+// LiteralPtr Map::get(const std::string &key)
+// {
+//     if (entries.find(key) == entries.end())
+//         return nullptr;
+//     return entries[key];
+// }
+
+// void Map::clear()
+// {
+//     entries.clear();
+// }
+
+// bool Map::remove(const std::string &key)
+// {
+//     if (entries.find(key) == entries.end())
+//         return false;
+//     entries.erase(key);
+//     return true;
+// }
+
+// bool Map::contains(const std::string &key)
+// {
+//     return entries.find(key) != entries.end();
+// }
+
+// Literal::Literal()
+// {
+//     type = UNDEFINED;
+//     value = 0;
+// }
+
 ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////
-Map::Map(LiteralType type)
-{
-    this->type = type;
-}
-
-void Map::set(const std::string &key, const LiteralPtr &value)
-{
-    entries[key] = value;
-}
-
-LiteralPtr Map::get(const std::string &key)
-{
-    if (entries.find(key) == entries.end())
-        return nullptr;
-    return entries[key];
-}
-
-void Map::clear()
-{
-    entries.clear();
-}
-
-bool Map::remove(const std::string &key)
-{
-    if (entries.find(key) == entries.end())
-        return false;
-    entries.erase(key);
-    return true;
-}
-
-bool Map::contains(const std::string &key)
-{
-    return entries.find(key) != entries.end();
-}
+///////////////////////////////////////////////////////////
 
 Literal::Literal()
 {
-    type = UNDEFINED;
-    value = 0;
 }
-
-///////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////
 
 Literal::Literal(long v)
 {
@@ -132,12 +136,16 @@ Literal::Literal(const std::string &v)
     value = v;
 }
 
-
+Literal::~Literal()
+{
+   // Log(0, "Literal deleted %s", toString().c_str());
+}
 
 std::string Literal::getString() const
 {
     if (type == STRING)
         return std::get<std::string>(value);
+    Log(1, "Literal is not a string (%s)",toString().c_str()); 
     return "null";
 }
 
@@ -145,13 +153,27 @@ double Literal::getFloat() const
 {
     if (type == FLOAT)
         return std::get<double>(value);
-    return 0.0;
+    if (type == INT)
+        return static_cast<double>(getInt());
+    if (type == BYTE)
+        return static_cast<double>(getByte());
+    if (type == BOOLEAN)
+        return static_cast<double>(getBool());
+    return -1.0;
 }
 
 bool Literal::getBool() const
 {
     if (type == BOOLEAN)
         return std::get<bool>(value);
+    
+    if (type == INT)
+        return static_cast<bool>(getInt());
+    if (type == BYTE)
+        return static_cast<bool>(getByte());
+    if (type == FLOAT)
+        return static_cast<bool>(getFloat());
+  
     return false;
 }
 
@@ -159,7 +181,13 @@ unsigned char Literal::getByte() const
 {
     if (type == BYTE)
         return std::get<unsigned char>(value);
-    return 0;
+    if (type == INT)
+        return static_cast<unsigned char>(getInt());
+    if (type == FLOAT)
+        return static_cast<unsigned char>(getFloat());
+    if (type == BOOLEAN)
+        return static_cast<unsigned char>(getBool());
+    return 255;
    
 }
 
@@ -167,8 +195,14 @@ long Literal::getInt() const
 {
     if (type == INT)
         return std::get<long>(value);
-    return 0;
-    
+    if (type == FLOAT)
+        return static_cast<long>(getFloat());
+   else if (type == BYTE)
+        return static_cast<long>(getByte());
+    else if (type == BOOLEAN)
+        return static_cast<long>(getBool());
+
+    return INT32_MAX;
 }
 
 void Literal::setString(const std::string &v)
@@ -179,13 +213,21 @@ void Literal::setString(const std::string &v)
     {
         if (type == INT)
             value = static_cast<long>(std::stol(v)); 
-        if (type == FLOAT)
+        else if (type == FLOAT)
             value = static_cast<double>(std::stold(v));
-        if (type == BYTE)
+        else if (type == BYTE)
             value =  static_cast<unsigned char>(std::stoul(v));
-        if (type == BOOLEAN)
+        else if (type == BOOLEAN)
             value = static_cast<bool>(std::stoi(v));
+         else
+         {
+                type = STRING;
+                value = v;
+         }   
     }
+
+  
+
 }
 
 void Literal::setFloat(const double &v)
@@ -196,14 +238,20 @@ void Literal::setFloat(const double &v)
     {
         if (type == INT)
             value = static_cast<double>(v);
-        if (type == BOOLEAN)
+        else if (type == BOOLEAN)
             value = static_cast<bool>(v);
-        if (type == BYTE)
+       else  if (type == BYTE)
             value =  static_cast<unsigned char>(v);
-        if (type == STRING)
+        else if (type == STRING)
             value = std::to_string(v);
+        {
+            type = FLOAT;
+            value = v;
+        }
             
     }
+
+
 }
 
 void Literal::setBool(const bool &v)
@@ -214,13 +262,19 @@ void Literal::setBool(const bool &v)
     {
         if (type == INT)
             value = static_cast<long>(v);
-        if (type == FLOAT)
+        else if (type == FLOAT)
             value = static_cast<double>(v);
-        if (type == BYTE)
+        else if (type == BYTE)
             value =  static_cast<unsigned char>(v);
-        if (type == STRING)
+        else if (type == STRING)
             value = std::to_string(v);
+        else 
+        {
+            type = BOOLEAN;
+            value = v;
+        }
     }
+
 }
 
 void Literal::setByte(const unsigned char &v)
@@ -231,13 +285,19 @@ void Literal::setByte(const unsigned char &v)
     {
         if (type == INT)
             value = static_cast<long>(v);
-        if (type == FLOAT)
+        else if (type == FLOAT)
             value = static_cast<double>(v);
-        if (type == BOOLEAN)
+        else if (type == BOOLEAN)
             value = static_cast<bool>(v);
-        if (type == STRING)
+        else if (type == STRING)
             value = std::to_string(v);
+        else
+        {
+            type = BYTE;
+            value = v;
+        }
     }
+
 }
 
 void Literal::setInt(const long &v)
@@ -248,13 +308,19 @@ void Literal::setInt(const long &v)
     {
         if (type == FLOAT)
             value = static_cast<double>(v);
-        if (type == BOOLEAN)
+        else if (type == BOOLEAN)
             value = static_cast<bool>(v);
-        if (type == BYTE)
+        else if (type == BYTE)
             value =  static_cast<unsigned char>(v);
-        if (type == STRING)
+        else if (type == STRING)
             value = std::to_string(v);
+        else 
+        {
+            type = INT;
+            value = v;
+        }
     }
+  
 }
 
 bool Literal::isTruthy() const
@@ -309,6 +375,7 @@ bool Literal::isEqual(Literal *other) const
 {
     return isEqual(*other);
 }
+
 
 long Literal::asInt() const
 {
@@ -372,7 +439,7 @@ bool Literal::assign(const Literal &other)
     {
         if (otherType == INT)
         {
-            value = static_cast<double>(other.getInt());
+            value =  static_cast<double>(other.getInt());
             return true;
         }
         if (otherType == BYTE)

@@ -6,11 +6,10 @@
 
 LiteralExpr::~LiteralExpr()
 {
+    
    // Log(0, "Delete LiteralExpr");
-    if (USE_POOL)
-    {
-      //  LiteralPool::Instance().release(value);
-    }
+   // LiteralPool::Instance().release(std::move(value));
+
 }
 
 std::shared_ptr<Expr> LiteralExpr::accept(Visitor *visitor)

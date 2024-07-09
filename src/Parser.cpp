@@ -358,46 +358,46 @@ std::shared_ptr<Expr> Parser::primary()
     if (match(TokenType::FALSE))
     {
         
-          return  LiteralPool::createBoolLiteral(false);
+          return  Factory::Instance().createBoolLiteral(false);
     }
     if (match(TokenType::TRUE))
     {
           
-          return LiteralPool::createBoolLiteral(true);
+          return Factory::Instance().createBoolLiteral(true);
    
     }
     if (match(TokenType::NIL))
     {
    
-        return LiteralPool::createIntegerLiteral(0);
+        return Factory::Instance().createIntegerLiteral(0);
    
     }
     if (match(TokenType::STRING))
     {
         std::string value = previous().literal;
      
-        return LiteralPool::createStringLiteral(value);
+        return Factory::Instance().createStringLiteral(value);
     }
     
     if (match(TokenType::FLOAT))
     {
         double value =std::stod(previous().literal);
        
-        return LiteralPool::createFloatLiteral(value);
+        return Factory::Instance().createFloatLiteral(value);
     }
 
     if (match(TokenType::INT))
     {
         int value = std::stoi(previous().literal);
        
-        return LiteralPool::createIntegerLiteral(value);
+        return Factory::Instance().createIntegerLiteral(value);
     }
 
     if (match(TokenType::BYTE))
     {
         int value = std::stoi(previous().literal);
        
-        return LiteralPool::createByteLiteral(value);
+        return Factory::Instance().createByteLiteral(value);
     }
 
   
@@ -711,7 +711,7 @@ std::shared_ptr<FunctionStmt> Parser::functionStmt()
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
                     
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createIntegerLiteral(INTMAX_MAX);
+                    std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createIntegerLiteral(INTMAX_MAX);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
 
@@ -719,21 +719,21 @@ std::shared_ptr<FunctionStmt> Parser::functionStmt()
             if (match(TokenType::IDFLOAT))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createFloatLiteral(MAXFLOAT);
+                    std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createFloatLiteral(MAXFLOAT);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
             } else
             if (match(TokenType::IDBYTE))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createByteLiteral(0);
+                    std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createByteLiteral(0);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
             } else
             if (match(TokenType::IDSTRING))
             {
                 Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createStringLiteral("NULL");
+                std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createStringLiteral("NULL");
                 std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                 parameter.push_back(arg);
                
@@ -741,7 +741,7 @@ std::shared_ptr<FunctionStmt> Parser::functionStmt()
             if (match(TokenType::IDBOOL))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createBoolLiteral(false);
+                    std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createBoolLiteral(false);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
             }
@@ -811,27 +811,27 @@ std::shared_ptr<ProcedureStmt> Parser::procedureStmt()
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
                     
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createIntegerLiteral(INTMAX_MAX);
+                    std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createIntegerLiteral(INTMAX_MAX);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
 
             } else if (match(TokenType::IDFLOAT))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createFloatLiteral(MAXFLOAT);
+                    std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createFloatLiteral(MAXFLOAT);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
             }  else if (match(TokenType::IDBYTE))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createByteLiteral(0);
+                    std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createByteLiteral(0);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
             }else 
             if (match(TokenType::IDSTRING))
             {
                 Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createStringLiteral("NULL");
+                std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createStringLiteral("NULL");
                 std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                 parameter.push_back(arg);
                
@@ -839,7 +839,7 @@ std::shared_ptr<ProcedureStmt> Parser::procedureStmt()
             if (match(TokenType::IDBOOL))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createBoolLiteral(false);
+                    std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createBoolLiteral(false);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
             }
@@ -929,28 +929,28 @@ std::shared_ptr<ProcessStmt> Parser::processStmt()
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
                     
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createIntegerLiteral(INTMAX_MAX);
+                    std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createIntegerLiteral(INTMAX_MAX);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
 
             } else if (match(TokenType::IDFLOAT))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createFloatLiteral(0.0);
+                    std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createFloatLiteral(0.0);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
             }else 
             if (match(TokenType::IDBYTE))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createByteLiteral(0);
+                    std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createByteLiteral(0);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
             }else
             if (match(TokenType::IDSTRING))
             {
                 Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createStringLiteral("NULL");
+                std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createStringLiteral("NULL");
                 std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                 parameter.push_back(arg);
                
@@ -958,7 +958,7 @@ std::shared_ptr<ProcessStmt> Parser::processStmt()
             if (match(TokenType::IDBOOL))
             {
                     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
-                    std::shared_ptr<LiteralExpr> expr = LiteralPool::Instance().createBoolLiteral(false);
+                    std::shared_ptr<LiteralExpr> expr = Factory::Instance().Instance().createBoolLiteral(false);
                     std::shared_ptr<Argument> arg = std::make_shared<Argument>(name.literal, std::move(expr));
                     parameter.push_back(arg);
             }
@@ -1115,23 +1115,23 @@ std::shared_ptr<VarStmt> Parser::varDeclaration(LiteralType type)
 
             if (type == LiteralType::INT)
             {
-                initializer = LiteralPool::Instance().createIntegerLiteral(INT32_MAX);
+                initializer = Factory::Instance().Instance().createIntegerLiteral(INT32_MAX);
             } else 
             if (type == LiteralType::FLOAT)
             {
-                initializer = LiteralPool::Instance().createFloatLiteral(MAXFLOAT);
+                initializer = Factory::Instance().Instance().createFloatLiteral(MAXFLOAT);
             } else 
             if (type == LiteralType::BYTE)
             {
-                initializer = LiteralPool::Instance().createByteLiteral(0);
+                initializer = Factory::Instance().Instance().createByteLiteral(0);
             } else
             if (type == LiteralType::STRING)
             {
-                initializer =LiteralPool::Instance().createStringLiteral("NULL");
+                initializer =Factory::Instance().Instance().createStringLiteral("NULL");
             } else 
             if (type == LiteralType::BOOLEAN)
             {
-                initializer =LiteralPool::Instance().createBoolLiteral(false);
+                initializer =Factory::Instance().Instance().createBoolLiteral(false);
             } else 
             {
                 Warning(name,"Type not supported for variable assign");

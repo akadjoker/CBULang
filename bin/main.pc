@@ -7,17 +7,26 @@
                 float life =0;
                 loop;
                     begin 
+
                         x+=5;
                 
-                            if (x>=800)
-                            begin 
-                                x=0;
-                            end
+                
+                            if (x>=200)
+                            begin
+                               y++;
+                            end  
+                            if (x>=530)
+                            begin
+                               y-=20;
+                               x = 5;
+                            end  
+                          
                         life = life + 1;
                         if (life>=200)
                         begin
-                            break;
+                        // break;
                         end
+                       
                     end 
                 points++;    
         end
@@ -33,13 +42,22 @@
         
         process main()
         begin 
-            x=100;
-            y=200;
+          
+          
+           x = 100;
+           y = 200;
             
   
             string text="";
             loop 
                 begin 
+               
+               
+                x+=5;
+                
+                
+               
+
 
                 circle(x,y,5,false);       
            
@@ -51,15 +69,16 @@
                 
                 text="Points: "+points;
                 text(800/2,20,16,text);
+         
                 end
         end
+
+  
     begin
-        int points =0;
+         int points =0;
+         main(); 
 
-        main();
+  
 
 
-       
-        
-       
     end.

@@ -68,7 +68,7 @@ power           → unary ("^" unary)*
 unary           → ("!" | "-" | not | "++" | "--" ) unary
                 | primary
 
-primary         → NUMBER | STRING | "true" | "false" | "(" expression ")"
+primary         → float | STRING | "true" | "false" | "(" expression ")"
                 | IDENTIFIER
                 | IDENTIFIER "(" arguments? ")"
 
@@ -84,7 +84,9 @@ arguments       → expression ("," expression)*
 
 ### Data Types
 
-- `number`:  Double internal for all numbers
+- `byte`:  unsigned char as internal
+- `float`:  double as internal
+- `int`:  long as internal
 - `bool`: Boolean values (`true` or `false`).
 - `string`: Sequences of characters.
 
@@ -92,8 +94,8 @@ arguments       → expression ("," expression)*
 
 - Declaration and initialization of variables:
   ```plaintext
-  number a = 50;
-  number start_time = now;
+  float a = 50;
+  float start_time = now;
   bool flag = true;
   string msg = "Hello, World!";
   ```
@@ -109,7 +111,7 @@ arguments       → expression ("," expression)*
   ```
 - **Functions**: Defined using the `function` keyword with a specified return type.
   ```plaintext
-  function fibonacci(number n): number
+  function fibonacci(float n): float
   begin
       if (n <= 1)
           return n;
@@ -137,7 +139,7 @@ arguments       → expression ("," expression)*
 - **Loops**:
   - **While Loop**:
     ```plaintext
-    number i = 0;
+    float i = 0;
     while (i < 18)
     begin
         print("fibonacci:" + fibonacci(i));
@@ -146,7 +148,7 @@ arguments       → expression ("," expression)*
     ```
   - **Repeat Until Loop**:
     ```plaintext
-    number c = 0;
+    float c = 0;
     repeat
     begin
         print(c);
@@ -156,7 +158,7 @@ arguments       → expression ("," expression)*
     ```
   - **For Loop**:
     ```plaintext
-    for (number i = 0; i < 10; i++)
+    for (float i = 0; i < 10; i++)
     begin
         if (i == 4)
             break;
@@ -168,7 +170,7 @@ arguments       → expression ("," expression)*
 
 - **Switch Case**:
   ```plaintext
-  number state = 10;
+  float state = 10;
   switch (state)
   begin
       case 0:
@@ -204,7 +206,7 @@ arguments       → expression ("," expression)*
         begin
                 x=mouse_x();
                 y=mouse_y();
-                number life =0.0;
+                float life =0.0;
                 loop
                     begin 
                         x = x + 5;

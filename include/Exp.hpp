@@ -27,10 +27,9 @@ struct FunctionStmt;
 
 struct Expr 
 {
-    virtual ~Expr()
-    {
-       // std::cout<<"Delete Expr"<<std::endl;
-    }
+    
+
+    virtual ~Expr()  = default;
 
     virtual ExprType getType()    const { return ExprType::NONE; }
 
@@ -84,15 +83,27 @@ struct EmptyExpr : public Expr
 
 struct LiteralExpr : public Expr 
 {
-    std::shared_ptr<Literal> value;
+    Literal value;
 
-    LiteralExpr(std::shared_ptr<Literal> value) : value(std::move(value)) {}
+ 
+
+    LiteralExpr(long value) : value(value) {}
+
+    LiteralExpr(double value) : value(value) {}
+
+    LiteralExpr(unsigned char value) : value(value) {}
+
+    LiteralExpr(bool value) : value(value) {}
+
+    LiteralExpr(const std::string &value) : value(value) {}
 
     ExprType getType() const override     {        return ExprType::LITERAL;    }
 
     virtual ~LiteralExpr();
 
     std::shared_ptr<Expr> accept(Visitor *visitor) override;
+
+    Literal* Value() { return &value; }
 
 
 };

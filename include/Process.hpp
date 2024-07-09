@@ -36,7 +36,7 @@ public:
     bool running() const    {        return m_running;    }
 
     const std::string &getName() const    {        return name;    }
-    bool define(const std::string &name, const std::shared_ptr<Literal> &value);
+    bool define(const std::string &name, const Literal &value);
 
     void load(BlockStmt *block);
 

@@ -29,6 +29,7 @@ public:
     Literal(bool v);
     Literal(unsigned char v);
     Literal(const std::string &v);
+    ~Literal();
 
 
  
@@ -53,7 +54,8 @@ public:
     bool isByte() const { return type == BYTE; }
     bool isBool() const { return type == BOOLEAN; }
     bool isString() const { return type == STRING; }
-    
+
+
 
     long            asInt() const;
     std::string     asString() const;
@@ -75,39 +77,39 @@ public:
 
 using LiteralPtr = std::shared_ptr<Literal>;
 
-class List 
-{
+// class List 
+// {
 
-private:
-    LiteralType type;
-    std::vector<LiteralPtr> elements;
-public:
-    List(LiteralType type);
+// private:
+//     LiteralType type;
+//     std::vector<LiteralPtr> elements;
+// public:
+//     List(LiteralType type);
 
-    LiteralType getType() const { return type; }
-    void add(const LiteralPtr &element) ;
-    LiteralPtr get(size_t index);
-    void set(size_t index, LiteralPtr element);
-    void clear();
-    bool remove(size_t index);
-    LiteralPtr pop();
-    size_t size() const { return elements.size(); }
-};
+//     LiteralType getType() const { return type; }
+//     void add(const LiteralPtr &element) ;
+//     LiteralPtr get(size_t index);
+//     void set(size_t index, LiteralPtr element);
+//     void clear();
+//     bool remove(size_t index);
+//     LiteralPtr pop();
+//     size_t size() const { return elements.size(); }
+// };
 
-class Map 
-{
-    private:
-    std::unordered_map<std::string, LiteralPtr> entries;
-    LiteralType type;
-public:
-    Map(LiteralType type);
+// class Map 
+// {
+//     private:
+//     std::unordered_map<std::string, LiteralPtr> entries;
+//     LiteralType type;
+// public:
+//     Map(LiteralType type);
     
-    LiteralType getType() const { return type; }
-    void set(const std::string &key, const LiteralPtr &value);
-    LiteralPtr get(const std::string &key);
-    void clear();
-    bool remove(const std::string &key);
-    bool contains(const std::string &key);
-    size_t size() const { return entries.size(); }
+//     LiteralType getType() const { return type; }
+//     void set(const std::string &key, const LiteralPtr &value);
+//     LiteralPtr get(const std::string &key);
+//     void clear();
+//     bool remove(const std::string &key);
+//     bool contains(const std::string &key);
+//     size_t size() const { return entries.size(); }
    
-};
+// };

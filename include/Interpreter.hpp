@@ -3,6 +3,7 @@
 #include "Exp.hpp"
 #include "Stm.hpp"
 #include "Process.hpp"
+#include "Utils.hpp"
 
 
 const bool USE_POOL = false;
@@ -10,8 +11,8 @@ const bool USE_POOL = false;
 class Interpreter;
 class ExecutionContext;
 
-using LiteralList = std::shared_ptr<Literal>;
-typedef LiteralPtr (*NativeFunction)(ExecutionContext* ctx, int argc, LiteralList* argv);
+using   LiteralList =  Literal*;
+typedef LiteralPtr (*NativeFunction)(ExecutionContext* ctx, int argc);
 
 typedef struct 
 {
@@ -58,28 +59,37 @@ public:
     bool isTruthy(const LiteralPtr &value);
     bool isEqual(const LiteralPtr &lhs, const LiteralPtr &rhs);
 
-    bool isString(const LiteralList &value);
-    bool isInt(const LiteralList &value);
-    bool isFloat(const LiteralList &value);
-    bool isBool(const LiteralList &value);
-    bool isByte(const LiteralList &value);
-    
-   
-    LiteralPtr asFloat(double value);
 
+    long               getInt(size_t index);
+    double             getFloat(size_t index);
+    unsigned char      getByte(size_t index);
+    std::string        getString(size_t index) ;
+    bool               getBool(size_t index);
+   
+
+    LiteralPtr asFloat(double value) ;
     LiteralPtr asByte(unsigned char value);
- 
     LiteralPtr asInt(long value);
-    LiteralPtr asString(const std::string &value);
-    LiteralPtr asString(const char *value);
-    LiteralPtr asBool(bool value);
+    LiteralPtr  asString(const std::string &value);
+    LiteralPtr  asString(const char *value);
+    LiteralPtr  asBool(bool value);
 
     void Error(const std::string &message);
     void Info(const std::string &message);
 private:
     friend class Interpreter;
-    
-    
+    std::vector<Literal> values;
+
+    Literal *Get(size_t index) ;
+    Literal *getLiteralInt(size_t index) ;
+    Literal *getLiteralFloat(size_t index) ;
+    Literal *getLiteralByte(size_t index) ;
+    Literal *getLiteralString(size_t index) ;
+    Literal *getLiteralBool(size_t index) ;
+
+    void add(const Literal &value);
+
+
     Interpreter *interpreter;
 };
 
@@ -91,7 +101,7 @@ public:
     Visitor() = default;
     virtual ~Visitor() = default;
 
-    virtual std::shared_ptr<Expr> visit(const std::shared_ptr<Expr> &expr) = 0;
+    virtual std::shared_ptr<Expr> visit( std::shared_ptr<Expr> expr) = 0;
 
     virtual std::shared_ptr<Expr> visitEmptyExpr(EmptyExpr *expr) = 0;
 
@@ -140,46 +150,50 @@ public:
     
 };
 
-class LiteralPool
-{
-private:
-    LiteralPool();
-    ~LiteralPool();
 
-    std::vector<std::unique_ptr<Literal>> pool;
 
-    size_t maxPoolSize = 1000; // Default maximum pool size
 
-    void releaseLiteral(std::unique_ptr<Literal> literal);
-    std::shared_ptr<Literal> acquireLiteral();
-    void init(size_t size);
 
-public:
-    static LiteralPool &Instance()
+    class Factory
     {
-        static LiteralPool instance;
-        return instance;
-    }
+    private:
+        Factory();
+        ~Factory();
 
-    
-    std::shared_ptr<Literal> acquireInteger(long value);
-    std::shared_ptr<Literal> acquireFloat(double value);
-    std::shared_ptr<Literal> acquireByte(unsigned char value);
-    std::shared_ptr<Literal> acquireBool(bool value);
-    std::shared_ptr<Literal> acquireString(const std::string &value);
+     std::vector<std::shared_ptr<LiteralExpr>> intPool;
+     std::vector<std::shared_ptr<LiteralExpr>> floatPool;
+     std::vector<std::shared_ptr<LiteralExpr>> boolPool;
+     std::vector<std::shared_ptr<LiteralExpr>> stringPool;
+     std::vector<std::shared_ptr<LiteralExpr>> bytePool;
+     
+    size_t MaxPool = 100;
 
 
-    void release(std::shared_ptr<Literal> literal);
+    public:
+        static Factory &Instance()
+        {
+            static Factory instance;
+            return instance;
+        }
 
-    void setMaxPoolSize(size_t size) { maxPoolSize = size; }
+        void release(std::shared_ptr<Literal> literal);
 
-    void clear();
+        std::shared_ptr<Literal> acquireInteger(long value);
+        std::shared_ptr<Literal> acquireFloat(double value);
+        std::shared_ptr<Literal> acquireByte(unsigned char value);
+        std::shared_ptr<Literal> acquireBool(bool value);
+        std::shared_ptr<Literal> acquireString(const std::string &value);
 
-    static std::shared_ptr<LiteralExpr> createIntegerLiteral(long value);
-    static std::shared_ptr<LiteralExpr> createFloatLiteral(double value);
-    static std::shared_ptr<LiteralExpr> createByteLiteral(unsigned char value);
-    static std::shared_ptr<LiteralExpr> createStringLiteral(const std::string &value);
-    static std::shared_ptr<LiteralExpr> createBoolLiteral(bool value);
+        void clear();
+
+        std::shared_ptr<LiteralExpr> createIntegerLiteral(long value);
+        std::shared_ptr<LiteralExpr> createFloatLiteral(double value);
+        std::shared_ptr<LiteralExpr> createByteLiteral(unsigned char value);
+        std::shared_ptr<LiteralExpr> createStringLiteral(const std::string &value);
+        std::shared_ptr<LiteralExpr> createBoolLiteral(bool value);
+
+
+
 
 };
 
@@ -187,7 +201,8 @@ class Environment
 {
 
 private:
-    std::unordered_map<std::string, std::shared_ptr<Literal>> m_values;
+    std::unordered_map<std::string, Literal> m_values;
+    std::unordered_map<std::string, std::shared_ptr<Expr>> m_expresions;
 
     unsigned int m_depth;
     Environment *m_parent;
@@ -197,11 +212,22 @@ public:
 
     virtual ~Environment();
 
-    bool define(const std::string &name,const std::shared_ptr<Literal> &value);
+    bool define(const std::string &name,const  Literal &value);
 
-    std::shared_ptr<Literal> get(const std::string &name);
+    Literal *get(const std::string &name);
 
-    bool assign(const std::string &name, const std::shared_ptr<Literal> &value);
+    void set(const std::string &name, long value);
+    void set(const std::string &name, double value);
+    void set(const std::string &name, unsigned char value);
+    void set(const std::string &name, bool value);
+    void set(const std::string &name, const std::string &value);
+
+    bool assign(const std::string &name, const  Literal &value);
+
+    void remove(const std::string& name) ;
+
+    void print();
+
 
     bool contains(const std::string &name);
 
@@ -216,6 +242,10 @@ public:
     unsigned int count() const { return m_values.size(); }
 
     unsigned int getDepth() const { return m_depth; }
+
+    bool Put(const std::string &name, std::shared_ptr<Expr> value);
+    std::shared_ptr<Expr> Remove(const std::string &name);
+
 };
 
 
@@ -225,7 +255,11 @@ public:
     Interpreter();
     virtual ~Interpreter();
 
-    std::shared_ptr<Expr> visit(const std::shared_ptr<Expr> &expr);
+    std::shared_ptr<Expr> visit( std::shared_ptr<Expr> expr);
+    std::shared_ptr<Expr> evaluate( std::shared_ptr<Expr> expr);
+
+
+
     std::shared_ptr<Expr> visitBinaryExpr(BinaryExpr *expr);
     std::shared_ptr<Expr> visitLogicalExpr(LogicalExpr *expr);
     std::shared_ptr<Expr> visitGroupingExpr(GroupingExpr *expr);
@@ -233,8 +267,8 @@ public:
     std::shared_ptr<Expr> visitUnaryExpr(UnaryExpr *expr);
     std::shared_ptr<Expr> visitNowExpr(NowExpr *expr);
     std::shared_ptr<Expr> visitEmptyExpr(EmptyExpr *expr);
-    std::shared_ptr<Expr> visitVariableExpr(VariableExpr *expr);
-    std::shared_ptr<Expr> visitAssignExpr(AssignExpr *expr);
+    std::shared_ptr<Expr> visitVariableExpr(VariableExpr *expr);//read
+    std::shared_ptr<Expr> visitAssignExpr(AssignExpr *expr);//write
     std::shared_ptr<Expr> visitFunctionCallExpr(FunctionCallExpr *expr);
     std::shared_ptr<Expr> visitNativeFunctionExpr(NativeFunctionExpr *expr);
     std::shared_ptr<Expr> visitProcessCallExpr(ProcessCallExpr *expr) ;
@@ -242,7 +276,7 @@ public:
 
 
     void visitPrintStmt(PrintStmt *stmt);
-    void visitVarStmt(VarStmt *stmt);
+    void visitVarStmt(VarStmt *stmt);//declaration
     void visitBlockStmt(BlockStmt *stmt);
     void visitExpressionStmt(ExpressionStmt *stmt);
     void visitProgram(Program *stmt);
@@ -272,9 +306,6 @@ public:
  //   void execute(const std::unique_ptr<Stmt> &statement);
 
     void execute(Stmt *statement);
-
-    std::shared_ptr<Expr> evaluate(const std::shared_ptr<Expr> &expr);
-    //std::shared_ptr<Expr> evaluate(const std::unique_ptr<Expr> &expr);
 
 
 
@@ -316,7 +347,7 @@ private:
     
 
 
-    std::shared_ptr<Literal> native_args[25];
+    std::vector<Literal*> native_args;
     std::shared_ptr<Environment> globalEnvironment;
     std::stack<std::shared_ptr<Environment>> environmentStack;
     std::shared_ptr<ExecutionContext> context;
@@ -327,7 +358,7 @@ private:
 
     double time_elapsed();
 
-
+     std::shared_ptr<Expr> CallNativeFunction(const std::string &name, int argc, Literal **argv);
 
     NativeFunction getNativeFunction(const std::string &name) const;
     bool isNativeFunctionDefined(const std::string &name) const;
