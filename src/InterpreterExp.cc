@@ -1288,7 +1288,7 @@ std::shared_ptr<Expr> Interpreter::visitUnaryExpr(UnaryExpr *expr)
                 VariableExpr *variable = static_cast<VariableExpr*>(expr->right.get());
                 std::string name = variable->name.lexeme;
 
-                Literal* value = this->environment->get(name);
+                Literal* value = this->currentEnvironment()->get(name);
                 if (!value)
                 {
                     Error(expr->op, "Can Increment, variable  '" + name + "' ");
@@ -1309,7 +1309,7 @@ std::shared_ptr<Expr> Interpreter::visitUnaryExpr(UnaryExpr *expr)
 
                 std::string name = variable->name.lexeme;
 
-                Literal *value = this->environment->get(name);
+                Literal *value = this->currentEnvironment()->get(name);
                 if (!value)
                 {
                     Error(expr->op, "Can Increment, variable  '" + name + "' ");

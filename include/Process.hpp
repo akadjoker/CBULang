@@ -13,7 +13,7 @@ class Process
 {
 
     std::string name;
-    unsigned int ID;
+    long ID;
     bool m_running;
     std::shared_ptr<Environment> environment;
     BlockStmt *block;
@@ -25,7 +25,7 @@ class Process
     friend class Interpreter;
 
 public:
-    Process(Interpreter *i,const std::string &name, unsigned int ID, BlockStmt *block, Environment *environment);
+    Process(Interpreter *i,const std::string &name, long ID, BlockStmt *block);
 
     virtual ~Process();
 

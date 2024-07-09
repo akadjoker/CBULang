@@ -6,7 +6,12 @@
 #include "Utils.hpp"
 
 
-const bool USE_POOL = false;
+const long DEFAULT_INT=0;
+const double DEFAULT_FLOAT=0;
+const unsigned char DEFAULT_BYTE = 255;
+const bool DEFAULT_BOOL = false;
+const std::string DEFAULT_STRING = "null";
+
 
 class Interpreter;
 class ExecutionContext;
@@ -202,13 +207,12 @@ class Environment
 
 private:
     std::unordered_map<std::string, Literal> m_values;
-    std::unordered_map<std::string, std::shared_ptr<Expr>> m_expresions;
-
+ 
     unsigned int m_depth;
-    Environment *m_parent;
+    std::shared_ptr<Environment> m_parent;
 
 public:
-    Environment(int depth, Environment *parent = nullptr);
+    Environment(int depth,   std::shared_ptr<Environment> parent);
 
     virtual ~Environment();
 
@@ -243,8 +247,7 @@ public:
 
     unsigned int getDepth() const { return m_depth; }
 
-    bool Put(const std::string &name, std::shared_ptr<Expr> value);
-    std::shared_ptr<Expr> Remove(const std::string &name);
+
 
 };
 
@@ -307,10 +310,15 @@ public:
 
     void execute(Stmt *statement);
 
+    void enterBlock();
+    void enterLocal(const std::shared_ptr<Environment> &env);
+    
+    void exitBlock();
 
+    std::shared_ptr<Environment> currentEnvironment();
+    std::shared_ptr<Environment> globalEnvironment();
 
-
-//taks
+    // taks
   
  
 
@@ -328,11 +336,10 @@ public:
 
     void registerFunction(const std::string &name, NativeFunction function);
 
-    std::shared_ptr<Environment> environment;
-    
+     std::stack<std::shared_ptr<Environment>> environmentStack;
    
   
-    void executeBlock(BlockStmt *stmt, const std::shared_ptr<Environment> &env);
+    //void executeBlock(BlockStmt *stmt, const std::shared_ptr<Environment> &env);
      
      size_t Count() const { return processes.size(); }
 
@@ -348,8 +355,9 @@ private:
 
 
     std::vector<Literal*> native_args;
-    std::shared_ptr<Environment> globalEnvironment;
-    std::stack<std::shared_ptr<Environment>> environmentStack;
+    
+
+    std::shared_ptr<Environment> mainEnvironment;
     std::shared_ptr<ExecutionContext> context;
     std::chrono::high_resolution_clock::time_point start_time;
     std::vector<std::unique_ptr<Process>> processes;

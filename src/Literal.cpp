@@ -104,6 +104,8 @@
 
 Literal::Literal()
 {
+    type = UNDEFINED;
+    value = 0;
 }
 
 Literal::Literal(long v)
