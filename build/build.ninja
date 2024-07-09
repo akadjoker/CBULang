@@ -137,6 +137,7 @@ build CMakeFiles/main.dir/src/pch.cpp.o: CXX_COMPILER__main_Debug /media/djoker/
 build ../bin/main: CXX_EXECUTABLE_LINKER__main_Debug CMakeFiles/main.dir/src/Exp.cpp.o CMakeFiles/main.dir/src/Interpreter.cpp.o CMakeFiles/main.dir/src/Lexer.cpp.o CMakeFiles/main.dir/src/Literal.cpp.o CMakeFiles/main.dir/src/Parser.cpp.o CMakeFiles/main.dir/src/Process.cpp.o CMakeFiles/main.dir/src/Stm.cpp.o CMakeFiles/main.dir/src/Utils.cpp.o CMakeFiles/main.dir/src/main.cpp.o CMakeFiles/main.dir/src/pch.cpp.o
   FLAGS = -fexceptions -frtti -fno-strict-aliasing -g
   LINK_FLAGS = -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch
+  LINK_LIBRARIES = -lraylib
   OBJECT_DIR = CMakeFiles/main.dir
   POST_BUILD = :
   PRE_LINK = :

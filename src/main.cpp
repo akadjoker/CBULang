@@ -11,7 +11,7 @@
 #undef USE_RAYLIB
 
 #ifdef USE_RAYLIB
-#include "raylib.h"
+#include <raylib.h>
 #else
 int IsMouseButtonDown(int button) { return false; }
 int IsMouseButtonPressed(int button) { return false; }
@@ -240,18 +240,16 @@ static const NativeFuncDef native_funcs[] = {
             }
          
             
-          //  interpreter.run(program);
-            }
          
         #else
                 interpreter.build(program);
                 interpreter.run();
          
         #endif
-         }
+         
     }
          
-  
+   }
  
 }
 catch (const FatalException& e) 
