@@ -6,6 +6,11 @@
 },
 {
   "directory": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/build",
+  "command": "/usr/bin/c++ -DGRAPHICS_API_OPENGL_33 -DPLATFORM_DESKTOP -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/src -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/external/raylib/src -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/external/raylib/src/external/glfw/include  -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx -o CMakeFiles/main.dir/src/Core.cpp.o -c /media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Core.cpp",
+  "file": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Core.cpp"
+},
+{
+  "directory": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/build",
   "command": "/usr/bin/c++ -DGRAPHICS_API_OPENGL_33 -DPLATFORM_DESKTOP -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/include -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/src -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/external/raylib/src -I/media/djoker/code/code2/cpp/scripting/VM/CBULang/external/raylib/src/external/glfw/include  -fexceptions -frtti -fno-strict-aliasing -g -Wextra -Wall -Wno-missing-field-initializers -Wundef -Wuninitialized -Wunused -Wno-unused-parameter -Wwrite-strings -Wchar-subscripts -funsigned-char -fsanitize=address -fsanitize=undefined -fsanitize=leak -g -Winvalid-pch -std=c++17 -Winvalid-pch -include /media/djoker/code/code2/cpp/scripting/VM/CBULang/build/CMakeFiles/main.dir/cmake_pch.hxx -o CMakeFiles/main.dir/src/Exp.cpp.o -c /media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Exp.cpp",
   "file": "/media/djoker/code/code2/cpp/scripting/VM/CBULang/src/Exp.cpp"
 },

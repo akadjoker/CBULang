@@ -3,8 +3,14 @@
 #include "Utils.hpp"
 
 
-Lexer::Lexer(const std::string &input)
+Lexer::Lexer() 
 {
+  
+}
+
+bool Lexer::Load(const std::string &input)
+{
+    if (input.size() == 0) return false;
     this->input = input;
     start = 0;
     current = 0;
@@ -13,53 +19,8 @@ Lexer::Lexer(const std::string &input)
     isProcedure = false;
     isFunction = false;
     isProcess = false;
-
-   keywords["and"] = TokenType::AND;
-    keywords["or"] = TokenType::OR;
-    keywords["not"] = TokenType::NOT;
-    keywords["xor"] = TokenType::XOR;
-    
-    keywords["if"] = TokenType::IF;
-    keywords["elif"] = TokenType::ELIF;
-    keywords["else"] = TokenType::ELSE;
-
-    keywords["for"] = TokenType::FOR;
-    keywords["repeat"] = TokenType::REPEAT;
-    keywords["while"] = TokenType::WHILE;
-    keywords["until"] = TokenType::UNTIL;
-
-    keywords["loop"] = TokenType::LOOP;
-    keywords["switch"] = TokenType::SWITCH;
-    keywords["case"] = TokenType::CASE;
-    keywords["default"] = TokenType::DEFAULT;
-
-    keywords["begin"] = TokenType::BEGIN;
-    keywords["end"] = TokenType::END;
-    keywords["program"] = TokenType::PROGRAM;
-
-    keywords["break"] = TokenType::BREAK;
-    keywords["continue"] = TokenType::CONTINUE;
-    keywords["return"] = TokenType::RETURN;
-
-    keywords["function"] = TokenType::FUNCTION;
-    keywords["procedure"] = TokenType::PROCEDURE;
-    keywords["process"] = TokenType::PROCESS;
-    
-
-    
-    keywords["nil"] = TokenType::NIL;
-    keywords["int"] = TokenType::IDINT;
-    keywords["float"] = TokenType::IDFLOAT;
-    keywords["byte"] = TokenType::IDBYTE;
-    keywords["string"] = TokenType::IDSTRING;
-    keywords["bool"] = TokenType::IDBOOL;
-    keywords["false"] = TokenType::FALSE;
-    keywords["true"] = TokenType::TRUE;
-
-    keywords["print"] = TokenType::PRINT;
-    keywords["now"] = TokenType::NOW;
-
-
+    nativeIndex = 0;
+    return true;
     
 
 
@@ -257,6 +218,29 @@ bool Lexer::ready()
     return true;
 }
 
+void Lexer::clear()
+{
+
+    input = "";
+    start = 0;
+    current = 0;
+    line = 1;
+    tokens.clear();
+    while (blocks.size() > 0) blocks.pop();
+    while (brackets.size() > 0) brackets.pop();
+    while (braces.size() > 0) braces.pop();
+    while (parens.size() > 0) parens.pop();
+
+    procedures.clear();
+    functions.clear();
+
+    panicMode = false;
+    isProcedure = false;
+    isFunction = false;
+    isProcess = false;
+
+}
+
 std::vector<Token> Lexer::scanTokens()
 {
     if (panicMode)
@@ -380,12 +364,77 @@ bool Lexer::hasFunction(const std::string &str)
     
 }
 
+bool Lexer::hasNative(const std::string &str)
+{
+
+    std::string lowerStr = toLower(str);
+    return natives.find(lowerStr) != natives.end();
+    
+}
+
+
 bool Lexer::hasProcess(const std::string &str)
 {
 
     std::string lowerStr = toLower(str);
     return processes.find(lowerStr) != processes.end();
     
+}
+
+void Lexer::addNative(const std::string &name)
+{
+  nativeIndex++;
+  std::string lowerStr = toLower(name);
+  natives[lowerStr] = nativeIndex;
+}
+
+void Lexer::initialize()
+{
+
+    keywords["and"] = TokenType::AND;
+    keywords["or"] = TokenType::OR;
+    keywords["not"] = TokenType::NOT;
+    keywords["xor"] = TokenType::XOR;
+    
+    keywords["if"] = TokenType::IF;
+    keywords["elif"] = TokenType::ELIF;
+    keywords["else"] = TokenType::ELSE;
+
+    keywords["for"] = TokenType::FOR;
+    keywords["repeat"] = TokenType::REPEAT;
+    keywords["while"] = TokenType::WHILE;
+    keywords["until"] = TokenType::UNTIL;
+
+    keywords["loop"] = TokenType::LOOP;
+    keywords["switch"] = TokenType::SWITCH;
+    keywords["case"] = TokenType::CASE;
+    keywords["default"] = TokenType::DEFAULT;
+
+    keywords["begin"] = TokenType::BEGIN;
+    keywords["end"] = TokenType::END;
+    keywords["program"] = TokenType::PROGRAM;
+
+    keywords["break"] = TokenType::BREAK;
+    keywords["continue"] = TokenType::CONTINUE;
+    keywords["return"] = TokenType::RETURN;
+
+    keywords["function"] = TokenType::FUNCTION;
+    keywords["procedure"] = TokenType::PROCEDURE;
+    keywords["process"] = TokenType::PROCESS;
+    
+
+    
+    keywords["nil"] = TokenType::NIL;
+    keywords["int"] = TokenType::IDINT;
+    keywords["float"] = TokenType::IDFLOAT;
+    keywords["byte"] = TokenType::IDBYTE;
+    keywords["string"] = TokenType::IDSTRING;
+    keywords["bool"] = TokenType::IDBOOL;
+    keywords["false"] = TokenType::FALSE;
+    keywords["true"] = TokenType::TRUE;
+
+    keywords["print"] = TokenType::PRINT;
+    keywords["now"] = TokenType::NOW;
 }
 
 void Lexer::identifier()
@@ -453,6 +502,9 @@ void Lexer::identifier()
              } else if (hasProcess(text))
              {
                 addToken(TokenType::IDPROCESS, text);
+             } else if (hasNative(text))
+             {
+                addToken(TokenType::IDNATIVE, text);
              }
              else 
              {

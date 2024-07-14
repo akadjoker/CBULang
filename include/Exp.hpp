@@ -18,7 +18,7 @@ enum ExprType
     LOGICAL,
     NOW,
     FUNCTIONCALL,
-    NATIVEFUNCTIONCALL,
+    CALLER,
     PROCESSCALL,
     MAX
 };
@@ -61,8 +61,8 @@ struct Expr
                 return "Now";
             case FUNCTIONCALL:
                 return "FunctionCall";
-            case NATIVEFUNCTIONCALL:
-                return "NativeFunctionCall";   
+            case CALLER:
+                return "CALLER";   
             case PROCESSCALL:
                 return "ProcessCall";
             default:
@@ -219,34 +219,19 @@ struct FunctionCallExpr : public Expr
 
 
 
-struct NativeFunctionExpr : public Expr
+struct CallerExpr : public Expr
 {
     std::string name;
     int line;
     std::vector<std::shared_ptr<Expr>> parameters;
     unsigned int arity;
+    char caller;
 
-    NativeFunctionExpr(const std::string &name,int line, std::vector<std::shared_ptr<Expr>> parameters, unsigned int arity)
-        : name(name), line(line),parameters(std::move(parameters)), arity(arity) {}
+    CallerExpr(const std::string &name,int line, std::vector<std::shared_ptr<Expr>> parameters, unsigned int arity, char caller)
+        : name(name), line(line),parameters(std::move(parameters)), arity(arity), caller(caller) {}
 
-    ExprType getType() const override { return ExprType::NATIVEFUNCTIONCALL; }
-
-    std::shared_ptr<Expr> accept(Visitor *visitor) override;
-};
-
-struct ProcessCallExpr : public Expr
-{
-    std::string name;
-    int line;
-    std::vector<std::shared_ptr<Expr>> arguments;
-    unsigned int arity;
-
-
-    ProcessCallExpr(const std::string &name,int line, std::vector<std::shared_ptr<Expr>> parameters, unsigned int arity)
-        : name(name), line(line),arguments(std::move(parameters)), arity(arity)  {}
-        
-
-    ExprType getType() const override { return ExprType::PROCESSCALL; }
+    ExprType getType() const override { return ExprType::CALLER; }
 
     std::shared_ptr<Expr> accept(Visitor *visitor) override;
 };
+

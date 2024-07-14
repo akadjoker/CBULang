@@ -1,75 +1,181 @@
     program main;
+
+
+        process explode(float x, float y)
+        begin 
+            graph = 21;
+            scale_x=0.3;
+            scale_y=0.3;
+            float frameTime      =0.0;
+            float frameInterval  =0.05;
+            int frame =0;
+
+            loop 
+                begin 
+
+                    float currentTime = Time();
+                    if (currentTime - frameTime>= frameInterval)
+                    begin
+                        frameTime = currentTime;
+                        frame++;
+                    end
+
+                    if (frame>=16)
+                    begin 
+                        break;
+                    end 
+                    graph = 21 +frame;
+
+                end 
+        end 
+
+        process bala(float x,float y,float angle)
+        begin
+            graph = 2;
+            scale_x=0.4;
+            scale_y=0.4;
+            loop
+                begin 
+                    advance(1);
+                    if (place_meeting(x,y,"ovni"))
+                        break;
+                    if (out_screen())
+                        break;
+                end
+        end
+
+        process cano(float x, float y)
+        begin
+            graph=3;
+            angle=-90;
+            set_parent();
+            loop 
+                begin
+                           
+                            if (mouse_pressed(0))
+                            begin
+                                 float to = get_world_angle() -90;
+                                 float pos_x = get_world_x(5);
+                                 float pos_y = get_world_y(5);
+                                 bala(pos_x,pos_y, to)  ; 
+                            end
+                end
+        end
+
         process nave(float _x,float _y)
         begin
                
                 x=_x;
                 y=_y;
-                float life =0;
-                loop;
+                cano(40,24);
+                cano(40,75);
+
+                graph = 1;
+                loop
                     begin 
 
-                        x+=5;
-                
-                
-                            if (x>=200)
+                                
+                            rotate_towards_mouse(0.5);
+
+                            if (key_down(_w))
                             begin
-                               y++;
-                            end  
-                            if (x>=530)
-                            begin
-                               y-=20;
-                               x = 5;
-                            end  
-                          
-                        life = life + 1;
-                        if (life>=200)
-                        begin
-                        // break;
-                        end
-                       
+                            advance(0.1);
+                            end 
+
+                            
+                   
                     end 
-                points++;    
+                
         end
-        
-        process bala(float x,float y)
+
+        process ovni()
         begin
            
-            loop
-             begin 
-                break;
-             end
-        end 
+            graph = 10 + Random(0,4);
+            int energia = 10;
+            float size= 0.5;
+            float pump = 0.0;
+            float anim=0.0;
+
+           
+
+            int state = Random(0,4);
+            switch(state)
+            begin 
+                case 0:
+                begin 
+                    x = Range(-40,0);
+                    y = Range(-40,0);
+                end 
+                case 1:
+                begin 
+                    x = Range(-40,0);
+                    y = Range(screenHeight,screenHeight+40);
+                end 
+                case 2:
+                begin 
+                    x = Range(screenWidth,screenWidth+40);
+                    y = Range(-40,0);
+                end 
+                case 3:
+                begin 
+                    x = Range(screenWidth,screenWidth+40);
+                    y = Range(screenHeight,screenHeight+40);
+                end 
+            end 
+
+          
+            
+            loop    
+                begin 
+                    anim += 1.2 * DeltaTime(); 
+                    pump = PingPong(anim,0.5);
+
+                    scale_x = size + pump;
+                    scale_y = size + pump;                
+
+
+                    rotate_towards("nave",0.89);
+                    advance (0.05);
+
+                        if (place_meeting(x,y,"bala"))
+                        begin
+                            energia--;
+                        end
+
+                        if (place_meeting(x,y,"nave"))
+                        begin
+                            energia--;
+                        end
+
+                        if (energia<=0)
+                        begin
+                            explode(x,y);
+                            break;
+                        end
+
+                end
+
+                points++;
+        end
+ 
         
         process main()
         begin 
-          
-          
-           x = 100;
-           y = 200;
-            
-  
-            string text="";
+            nave(200,200);
+            float spawnTime     =0.0;
+            float spawnInterval  =2.0;
             loop 
                 begin 
-               
-               
-                x+=5;
-                
-                
-               
 
+                    float currentTime = Time();
+                    if (currentTime - spawnTime>= spawnInterval)
+                    begin
+                        spawnTime = currentTime;
+                        ovni();
+                    end
 
-                circle(x,y,5,false);       
-           
-                if (mouse_down(0))
-                begin
-                        nave(mouse_x(),mouse_y());
-                end
-         
-                
-                text="Points: "+points;
-                text(800/2,20,16,text);
-         
+                    Text(800/2,20,16,"Points: "+points);
                 end
         end
 
@@ -78,13 +184,25 @@
   
     begin
         int points=0;
+        int screenWidth = 800;
+        int screenHeight = 450;
+
+
+        load_graph("assets/ship.png",1);
+        load_graph("assets/lazer.png",2);
+        load_graph("assets/gun02.png",3);
+
+        load_graph("assets/ufoBlue.png",10);
+        load_graph("assets/ufoGreen.png",11);
+        load_graph("assets/ufoRed.png",12);
+        load_graph("assets/ufoYellow.png",13);
+
+        load_atlas("assets/exp2.png",20,4,4);
+
+
+        
        
-         main(); 
-
-
-
-
-
-
+        main(); 
+        
 
     end.

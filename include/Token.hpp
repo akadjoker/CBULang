@@ -82,6 +82,7 @@ enum class TokenType
     IDFUNCTION,
     IDPROCEDURE,
     IDPROCESS,
+    IDNATIVE,
 
     // LOOPS
     WHILE,
@@ -171,6 +172,7 @@ inline std::string tknString(TokenType type)
         case TokenType::IDFUNCTION:    return "ID_FUNCTION";
         case TokenType::IDPROCEDURE:   return "ID_PROCEDURE";
         case TokenType::IDPROCESS:     return "ID_PROCESS";
+        case TokenType::IDNATIVE:      return "ID_NATIVE";
         case TokenType::WHILE:         return "WHILE";
         case TokenType::FOR:           return "FOR";
         case TokenType::REPEAT:        return "REPEAT";

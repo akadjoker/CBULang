@@ -335,6 +335,7 @@ struct ProcessStmt : public Stmt
     std::string name;
     std::vector<std::shared_ptr<Argument>> parameter;
     std::shared_ptr<Stmt> body;
+    size_t index;
 
     ProcessStmt(std::string name, std::vector<std::shared_ptr<Argument>> parameter, std::shared_ptr<Stmt> body);
 

@@ -4,6 +4,9 @@
 #include "Stm.hpp"
 #include "Process.hpp"
 #include "Utils.hpp"
+#include "Lexer.hpp"
+#include "Parser.hpp"
+
 
 
 const long DEFAULT_INT=0;
@@ -18,6 +21,7 @@ class ExecutionContext;
 
 using   LiteralList =  Literal*;
 typedef LiteralPtr (*NativeFunction)(ExecutionContext* ctx, int argc);
+typedef void (*GlobalScope)(ExecutionContext* ctx);
 
 typedef struct 
 {
@@ -70,19 +74,32 @@ public:
     unsigned char      getByte(size_t index);
     std::string        getString(size_t index) ;
     bool               getBool(size_t index);
+
+    Process *getCurrentProcess();
+
+    Process *getInternalProcess();
    
 
-    LiteralPtr asFloat(double value) ;
-    LiteralPtr asByte(unsigned char value);
-    LiteralPtr asInt(long value);
+    LiteralPtr  asFloat(double value) ;
+    LiteralPtr  asByte(unsigned char value);
+    LiteralPtr  asInt(long value);
     LiteralPtr  asString(const std::string &value);
     LiteralPtr  asString(const char *value);
     LiteralPtr  asBool(bool value);
+
+    bool define_int(const std::string &name, long value);
+    bool define_float(const std::string &name, double value);
+    bool define_byte(const std::string &name, unsigned char value);
+    bool define_string(const std::string &name, const std::string &value);
+    bool define_string(const std::string &name, const char *value);
+    bool define_bool(const std::string &name, bool value);
 
     void Error(const std::string &message);
     void Info(const std::string &message);
 private:
     friend class Interpreter;
+    Process *currentProcess;
+    Process *internalProcess;
     std::vector<Literal> values;
 
     Literal *Get(size_t index) ;
@@ -122,9 +139,10 @@ public:
 
     virtual std::shared_ptr<Expr> visitVariableExpr(VariableExpr *expr) = 0;
 
-    virtual std::shared_ptr<Expr> visitFunctionCallExpr(FunctionCallExpr *expr) = 0;
-    virtual std::shared_ptr<Expr> visitNativeFunctionExpr(NativeFunctionExpr *expr) = 0;
-    virtual std::shared_ptr<Expr> visitProcessCallExpr(ProcessCallExpr *expr) = 0;
+    
+
+    virtual std::shared_ptr<Expr> visitCallerFunctionExpr(CallerExpr *expr) = 0;
+
 
     virtual void visitProcedureStmt(ProcedureStmt *stmt) = 0;
     virtual void visitFunctionStmt(FunctionStmt *stmt) = 0;
@@ -272,10 +290,13 @@ public:
     std::shared_ptr<Expr> visitEmptyExpr(EmptyExpr *expr);
     std::shared_ptr<Expr> visitVariableExpr(VariableExpr *expr);//read
     std::shared_ptr<Expr> visitAssignExpr(AssignExpr *expr);//write
-    std::shared_ptr<Expr> visitFunctionCallExpr(FunctionCallExpr *expr);
-    std::shared_ptr<Expr> visitNativeFunctionExpr(NativeFunctionExpr *expr);
-    std::shared_ptr<Expr> visitProcessCallExpr(ProcessCallExpr *expr) ;
+    
+    std::shared_ptr<Expr> visitCallerFunctionExpr(CallerExpr *expr);
 
+
+    std::shared_ptr<Expr> callNativeFunction(CallerExpr *expr);
+    std::shared_ptr<Expr> callFunction(CallerExpr *expr);
+    std::shared_ptr<Expr> callProcess(CallerExpr *expr) ;
 
 
     void visitPrintStmt(PrintStmt *stmt);
@@ -299,14 +320,13 @@ public:
 
     void visitProcedureStmt(ProcedureStmt *stmt);
     void visitFunctionStmt(FunctionStmt *stmt);
-
     void visitProcessStmt(ProcessStmt *stmt) ;
 
     
     bool isTruthy(const std::shared_ptr<Expr> &expr);
 
     void execute(const std::shared_ptr<Stmt> &statement);
- //   void execute(const std::unique_ptr<Stmt> &statement);
+ 
 
     void execute(Stmt *statement);
 
@@ -320,11 +340,14 @@ public:
 
     // taks
   
- 
+     int CallerType(const std::string &name) ;
+
 
     bool run( );
+    bool compile(const std::string &source);
     void build(std::shared_ptr<Stmt> statement);
-
+    void cleanup();
+    void init();
 
     void Error(const Token &token, const std::string &message);
     void Warning(const std::string &message);
@@ -333,29 +356,29 @@ public:
 
     bool Equal(LiteralExpr *a, LiteralExpr *b);
 
+    bool processInitExecute(size_t index);
+    bool processEndExecute(size_t index);
+    bool processLoopExecute(size_t index);
 
     void registerFunction(const std::string &name, NativeFunction function);
+    void registerGlobalScope(GlobalScope function);
 
-     std::stack<std::shared_ptr<Environment>> environmentStack;
-   
-  
-    //void executeBlock(BlockStmt *stmt, const std::shared_ptr<Environment> &env);
-     
-     size_t Count() const { return processes.size(); }
+    std::stack<std::shared_ptr<Environment>> environmentStack;
 
+    size_t Count() const { return processes.size(); }
+    
+    ExecutionContext *getContext() { return context.get(); }
 private:
     friend class Parser;
+    friend class Process;
     bool panicMode;
     unsigned int currentDepth;
     uintptr_t addressLoop;
     unsigned long BlockID;
-    
+    std::shared_ptr<Stmt> program;
+    Lexer lexer;
+    Parser parser;
 
-    
-
-
-    std::vector<Literal*> native_args;
-    
 
     std::shared_ptr<Environment> mainEnvironment;
     std::shared_ptr<ExecutionContext> context;
@@ -411,6 +434,11 @@ private:
     std::unordered_map<std::string, ProcedureStmt *> procedureList;
     std::unordered_map<std::string, FunctionStmt *> functionList;
     std::unordered_map<std::string, ProcessStmt *> processList;
+    std::unordered_map<std::string, size_t> processListNames;
 
     std::unordered_map<std::string, NativeFunction> nativeFunctions;
+
+    std::vector<Literal*> native_args;
+    std::vector<std::shared_ptr<ProcessExecution>> processExecuter;
+
     };

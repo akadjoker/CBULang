@@ -14,6 +14,11 @@
 #include <fstream>
 #include <sstream>
 
+
+#include "Core.hpp"
+extern void register_core(Interpreter *interpreter);
+
+
 std::string readFile(const std::string& filePath)
 {
     std::ifstream file(filePath);
@@ -26,6 +31,8 @@ std::string readFile(const std::string& filePath)
     buffer << file.rdbuf();
     return buffer.str();
 }
+
+
 
 void Native_TraceLog(int logLevel, const char *text, va_list args)
 {
@@ -62,125 +69,19 @@ LiteralPtr native_writeln(ExecutionContext* ctx, int argc)
     return ctx->asBool(true);
 }
 
-LiteralPtr native_mouse_down(ExecutionContext* ctx, int argc) 
-{
-    if (argc != 1)
-    {
-        return ctx->asBool(false);
-    }
-    int button = ctx->getInt(0);
 
-    return ctx->asBool(IsMouseButtonDown(button));
-}
-
-LiteralPtr native_mouse_pressed(ExecutionContext* ctx, int argc) 
-{
-    if (argc != 1)
-    {
-        return ctx->asBool(false);
-    }
-    int button = ctx->getInt(0);
-    
-    return ctx->asBool(IsMouseButtonPressed(button));
-}
-
-LiteralPtr native_mouse_x(ExecutionContext* ctx, int argc) 
-{
-    return ctx->asFloat((float)GetMouseX());
-}
-
-LiteralPtr native_mouse_y(ExecutionContext* ctx, int argc) 
-{
-    return ctx->asFloat((float)GetMouseY());
-}
-
-LiteralPtr native_circle(ExecutionContext* ctx, int argc) 
-{
-
-    if (argc != 4)
-    {
-        ctx->Error("Usage: circle(x, y, radius, fill)"+std::to_string(argc));   
-        return ctx->asBool(false);
-    }
-     int x = ctx->getInt(0);
-     int y = ctx->getInt(1);
-     int radius = ctx->getInt(2);
-
-   
-    bool fill = ctx->getBool(3);
-
-    if (fill)
-    {
-        DrawCircle(x, y, radius, BLUE);
-    } else 
-    {
-       
-       DrawCircle(x, y, radius, RED);
-    }
-
-    
-    return ctx->asBool(true);
-}
-
-LiteralPtr native_text(ExecutionContext* ctx, int argc) 
-{
-
-    if (argc != 4)
-    {
-        ctx->Error("Usage: text(x, y, size, string)"+std::to_string(argc));   
-        return ctx->asBool(false);
-    }
-     int x =  ctx->getInt(0);
-     int y =  ctx->getInt(1);
-     int radius =  ctx->getInt(2);
-     std::string text =  ctx->getString(3).c_str();
-
-     DrawText(text.c_str(), x, y, radius, RED);
-    
-    return ctx->asBool(true);
-}
 
 
 
 int main()
 {
-static const NativeFuncDef native_funcs[] = {
-    {"writeln", native_writeln},
-    {"mouse_down", native_mouse_down},
-    {"mouse_pressed", native_mouse_pressed},
-    {"mouse_x", native_mouse_x},
-    {"mouse_y", native_mouse_y},
-    {"circle", native_circle},
-    {"text", native_text},
-    {NULL, NULL}
-};
 
-    try
-    {
-
+   
          std::string code = readFile("main.pc");
-         Factory::Instance();
          
-        Lexer lexer = Lexer(code);
-        std::vector<Token> tokens = lexer.scanTokens();
-         for (Token token : tokens)
-         {
-             //std::cout << token.toString() << std::endl;
-         }
-         if (lexer.ready())
-         {
-            Parser parser = Parser(tokens);
-            std::shared_ptr<Stmt> program = parser.parse();
-            Interpreter interpreter;
-            //interpreter.registerFunction("writeln", native_writeln);
-            for (const NativeFuncDef* def = native_funcs; def->name != NULL; def++) 
-            {
-                interpreter.registerFunction(def->name, def->func);
-            }
-            if (program)
-            {
+         Interpreter interpreter;
 
-
+         
 
             const int screenWidth = 800;
             const int screenHeight = 450;
@@ -190,51 +91,71 @@ static const NativeFuncDef native_funcs[] = {
             SetTraceLogCallback(Native_TraceLog);
 
             InitWindow(screenWidth, screenHeight, "BuLang with Raylib");
-            SetTargetFPS(60);
+            SetTargetFPS(1000);
 
-            interpreter.build(program);
 
-            
+            interpreter.init();
 
-            while (!WindowShouldClose())   
+            register_core(&interpreter);
+
+        bool sucess = false;
+        std::string text = "";
+
+    try
+    {
+            if (interpreter.compile(code))
+            {
+                sucess = true;
+            }
+        
+
+            while (!WindowShouldClose() && !sucess)   
             {
 
-                BeginDrawing();
-                ClearBackground(BLACK);
-                    if (!interpreter.run())
-                    {
-                        break;
-                    }
+                
 
-                DrawFPS(10,10);
-                DrawText(TextFormat("Process: %d", interpreter.Count()), 10, 40, 20, WHITE);
+                        if (!interpreter.run())
+                        {
+                            break;
+                        }
+                        
+                    
+
+                BeginDrawing();
+
+                Scene::Get().UpdateAndRefresh();
+       
+
                 EndDrawing();
             }
-         
+
+       
             
-         
-     
-         
-    }
-         
-   }
- 
-}
+ }
 catch (const FatalException& e) 
 {
-        std::string text = e.what();
+        text = e.what();
         Log(2,"Fatal: %s", text.c_str());
 }
 catch (const std::runtime_error& e) 
 {
-        std::string text = e.what();
+        text = e.what();
         Log(2,"Runtime: %s", text.c_str());
-}
+}         
+    
+         
+       
+   
+ 
 
+
+interpreter.cleanup();
+Scene::Get().Clear();
+CloseWindow(); 
 Factory::Instance().clear();
 
 
- CloseWindow(); 
+ 
 
             
 

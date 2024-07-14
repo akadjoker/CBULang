@@ -11,17 +11,19 @@
 class Parser
 {
 public:
-    Parser(const std::vector<Token> &tokens);
+    Parser();
     ~Parser();
 
-  
+    void Load(const std::vector<Token> &tokens);
+
     std::shared_ptr<Expr> result();
 
     std::shared_ptr<Stmt> parse();
 
-
+    void clear();
 
 private:
+    
     std::vector<Token> tokens;
     int current;
     bool panicMode;
@@ -69,10 +71,11 @@ private:
      std::shared_ptr<Literal> number();
      std::shared_ptr<Literal> string();
 
+     
 
-     std::shared_ptr<FunctionCallExpr> functionCall(const std::shared_ptr<Expr> &expr);
-     std::shared_ptr<NativeFunctionExpr> defNativeCall(const std::shared_ptr<VariableExpr> &expr);
-     std::shared_ptr<ProcessCallExpr> processCall(const std::shared_ptr<Expr> &expr);
+     std::shared_ptr<CallerExpr>       functionCall();
+     std::shared_ptr<CallerExpr>       nativeFunctionCall();
+     std::shared_ptr<CallerExpr>       processCall();
      
 
      

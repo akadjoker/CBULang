@@ -208,7 +208,7 @@ ProcessStmt::ProcessStmt(std::string name, std::vector<std::shared_ptr<Argument>
 : name(std::move(name)), parameter(std::move(parameter)), body(std::move(body)) 
 {
      ID = StatementID;
-
+     index = 0;
 }
 
 void ProcessStmt::accept(Visitor *visitor)

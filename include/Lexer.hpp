@@ -7,6 +7,7 @@
 class Lexer
 {
 private:
+    
     std::string input;
     int start;
     int current;
@@ -19,11 +20,13 @@ private:
     std::unordered_map<std::string, TokenType> keywords;
     std::unordered_map<std::string, int> procedures;
     std::unordered_map<std::string, int> functions;
+    std::unordered_map<std::string, int> natives;
     std::unordered_map<std::string, int> processes;
     std::stack<int> blocks;//begin end
     std::stack<int> brackets;  // []
     std::stack<int> braces;   // {}
     std::stack<int> parens;   // ()
+    int nativeIndex ;
 
 
     
@@ -56,13 +59,21 @@ private:
     bool hasProcedure(const std::string &str);
 
     bool hasFunction(const std::string &str);
-
+    bool hasNative(const std::string &str);
     bool hasProcess(const std::string &str);
 
+    
+
+    
+
 public:
-    Lexer(const std::string &input);
+    Lexer();
     ~Lexer() = default;
+    void initialize();
+    bool Load(const std::string &input);
     void scanToken();
     bool ready();
+    void  clear();
     std::vector<Token> scanTokens();
+    void addNative(const std::string &name);
 };

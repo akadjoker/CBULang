@@ -12,11 +12,22 @@ static uintptr_t getAddress(const void *ptr)
 
 Interpreter::Interpreter()
 {
+    lexer.initialize(); 
+}
+
+Interpreter::~Interpreter()
+{
+    cleanup();
+}
+
+void Interpreter::init()
+{
+
     Info("Create Interpreter");
     currentDepth = 0;
     addressLoop = 0x0;
     mainEnvironment = std::make_shared<Environment>(0, nullptr);
-
+    
 
     environmentStack.push(mainEnvironment);
 
@@ -39,16 +50,32 @@ Interpreter::Interpreter()
     panicMode = false;
     start_time = std::chrono::high_resolution_clock::now();
     time_elapsed();
+    Info("Init Interpreter");
 }
 
-Interpreter::~Interpreter()
+void Interpreter::cleanup()
 {
+
     Log(0, "Release Interpreter");
+    while(environmentStack.empty()==false)
+    {
+        environmentStack.pop();
+    }
 
     processes.clear();
     procedureList.clear();
     functionList.clear();
-    nativeFunctions.clear();
+    nativeFunctions.clear();     
+    processExecuter.clear();
+    processListNames.clear();
+    processList.clear();
+    currentDepth = 0;
+    program=nullptr;
+    context=nullptr;
+    mainEnvironment = nullptr;
+    mainEnvironment = nullptr;
+    
+
 }
 
 double Interpreter::time_elapsed()
@@ -161,14 +188,48 @@ std::shared_ptr<Environment> Interpreter::currentEnvironment()
 
 std::shared_ptr<Environment> Interpreter::globalEnvironment()
 {
+    
     return mainEnvironment;
 }
+
+bool Interpreter::compile(const std::string &source)
+{
+    lexer.clear();
+    
+    lexer.Load(source);
+    if (lexer.ready())
+    {
+            parser.clear();
+
+            std::vector<Token> tokens = lexer.scanTokens();
+            for (Token token : tokens)
+            {
+                Warning(token.toString());
+            }
+            if (tokens.size() == 0)
+            {
+                return false;
+            }
+
+            parser.Load(tokens);
+            program = parser.parse();
+            if (program != nullptr)
+            {
+                build(program);
+                return true;
+            }
+    }
+    return false;
+}
+
 
 void Interpreter::build(std::shared_ptr<Stmt> program)
 {
        execute(program);
 
   }
+
+
 
 void Interpreter::execute(const std::shared_ptr<Stmt> &stmt)
 {
@@ -227,7 +288,7 @@ void Interpreter::visitBlockStmt(BlockStmt *stmt)
 bool Interpreter::run()
 {
 
-
+    context->currentProcess = nullptr;
     for (size_t i = 0; i < processes.size(); i++)
     {
       
@@ -239,14 +300,18 @@ bool Interpreter::run()
             continue;
         }
 
-     
-
+        context->currentProcess = processes[i].get();
+        
+        context->internalProcess = processes[i].get();
         processes[i]->run();
+        
+        
 
   
 
       
     }
+    context->currentProcess = nullptr;
     
     remove_processes.clear();
     
@@ -508,14 +573,18 @@ void Interpreter::visitProcedureCallStmt(ProcedureCallStmt *stmt)
   ;
 }
 
-std::shared_ptr<Expr> Interpreter::visitFunctionCallExpr(FunctionCallExpr *expr)
+
+
+
+
+std::shared_ptr<Expr> Interpreter::callFunction(CallerExpr *expr)
 {
 
-    std::string name = expr->name.lexeme;
+    std::string name = expr->name;
 
     if (functionList.find(name) == functionList.end())
     {
-        Error("Function '" + name + "' not defined at line: " + std::to_string(expr->name.line));
+        Error("Function '" + name + "' not defined at line: " + std::to_string(expr->line));
         return std::make_shared<EmptyExpr>();
     }
     FunctionStmt *function = functionList[name];
@@ -526,11 +595,11 @@ std::shared_ptr<Expr> Interpreter::visitFunctionCallExpr(FunctionCallExpr *expr)
     }
 
     unsigned int numArgsExpectd = function->parameter.size();
-    unsigned int numArgs = expr->arguments.size();
+    unsigned int numArgs = expr->parameters.size();
 
     if (numArgs != numArgsExpectd)
     {
-        Error("Incorrect number of arguments passed to function '" + name + "' at line: " + std::to_string(expr->name.line) + " expected: " + std::to_string(numArgsExpectd) + " got: " + std::to_string(numArgs));
+        Error("Incorrect number of arguments passed to function '" + name + "' at line: " + std::to_string(expr->line) + " expected: " + std::to_string(numArgsExpectd) + " got: " + std::to_string(numArgs));
         return std::make_shared<EmptyExpr>();
     }
     this->currentDepth++;
@@ -539,10 +608,10 @@ std::shared_ptr<Expr> Interpreter::visitFunctionCallExpr(FunctionCallExpr *expr)
 
     for (unsigned int i = 0; i < numArgs; i++)
     {
-        std::shared_ptr<Expr> value = evaluate(expr->arguments[i]);
+        std::shared_ptr<Expr> value = evaluate(expr->parameters[i]);
         if (!value)
         {
-            Error(expr->name, "Invalid argument passed to function '" + name + "' at line: " + std::to_string(expr->name.line));
+            Error( "Invalid argument passed to function '" + name + "' at line: " + std::to_string(expr->line));
             return std::make_shared<EmptyExpr>();
         };
         std::string argName = function->parameter[i].get()->name;
@@ -554,7 +623,7 @@ std::shared_ptr<Expr> Interpreter::visitFunctionCallExpr(FunctionCallExpr *expr)
 
             if (!currentEnvironment()->define(argName, literal->value))
             {
-                Error(expr->name, "Variable '" + argName + "' already defined at line: " + std::to_string(expr->name.line));
+                Error( "Variable '" + argName + "' already defined at line: " + std::to_string(expr->line));
                 exitBlock();
                 return std::make_shared<EmptyExpr>();
             }
@@ -575,8 +644,22 @@ std::shared_ptr<Expr> Interpreter::visitFunctionCallExpr(FunctionCallExpr *expr)
         result = std::move(returnValue.value);
         if (!result)
         {
-            Error("Function return value is empty");
-            result = std::make_shared<EmptyExpr>();
+            if (function->returnType== LiteralType::INT)
+            {
+                result = Factory::Instance().createIntegerLiteral(0);
+            } else if (function->returnType== LiteralType::BOOLEAN) 
+            {
+                result = Factory::Instance().createBoolLiteral(false);
+            } else if (function->returnType== LiteralType::STRING) 
+            {
+                result = Factory::Instance().createStringLiteral("null");
+            } else if (function->returnType== LiteralType::FLOAT) 
+            {
+                result = Factory::Instance().createFloatLiteral(0.0);
+            } else if (function->returnType== LiteralType::BYTE) 
+            {
+                result = Factory::Instance().createByteLiteral(0);
+            }
         }
     }
     exitBlock();
@@ -586,7 +669,7 @@ std::shared_ptr<Expr> Interpreter::visitFunctionCallExpr(FunctionCallExpr *expr)
 
 
 
-std::shared_ptr<Expr> Interpreter::visitNativeFunctionExpr(NativeFunctionExpr *expr)
+std::shared_ptr<Expr> Interpreter::callNativeFunction(CallerExpr *expr)
 {
     const std::string name = expr->name;
     int line = expr->line - 1;
@@ -658,26 +741,24 @@ std::shared_ptr<Expr> Interpreter::visitNativeFunctionExpr(NativeFunctionExpr *e
     }
 }
 
-std::shared_ptr<Expr> Interpreter::visitProcessCallExpr(ProcessCallExpr *expr)
+
+std::shared_ptr<Expr> Interpreter::callProcess(CallerExpr *expr)
 {
 
     const std::string name = expr->name;
     int line = expr->line - 1;
-    if (processList.find(name) == processList.end())
-    {
-        Error("Process '" + name + "' at line: " + std::to_string(line) + " not defined");
-        return std::make_shared<EmptyExpr>();
-    }
     long id =(long) processID++;
     ProcessStmt *process = processList[name];
     if (!process)
     {
-        Error("Process '" + name + "' die");
+        Error("Process '" + name + "' at line: " + std::to_string(line) + " not defined");
         return std::make_shared<EmptyExpr>();
     }
 
+    size_t index = processListNames[name];
+
     unsigned int numArgsExpectd = process->parameter.size();
-    unsigned int numArgs = expr->arguments.size();
+    unsigned int numArgs = expr->parameters.size();
 
     if (numArgs != numArgsExpectd)
     {
@@ -686,27 +767,48 @@ std::shared_ptr<Expr> Interpreter::visitProcessCallExpr(ProcessCallExpr *expr)
     }
     this->currentDepth++;
 
-    BlockStmt *block = dynamic_cast<BlockStmt *>(process->body.get());
-
-
+  
  
 
-    std::unique_ptr<Process> newProcess = std::make_unique<Process>(this, name, id, block);
+    std::unique_ptr<Process> newProcess = std::make_unique<Process>(this, name, id,index);
+
+    if (context->internalProcess==nullptr)
+    {
+        context->internalProcess = newProcess.get();
+    }
+
 
      newProcess->environment =std::make_shared<Environment>(this->currentDepth, this->currentEnvironment());
      newProcess->environment->addInteger("id", id);
      newProcess->environment->addInteger("graph", 0);
+     newProcess->environment->addInteger("layer", 0);
+
      newProcess->environment->addFloat("x", 0.0);
      newProcess->environment->addFloat("y", 0.0);
+     newProcess->environment->addFloat("angle", 0.0);
 
-    // newProcess->environment->print();
+     newProcess->environment->addFloat("scale_x", 1.0);
+     newProcess->environment->addFloat("scale_y", 1.0);
 
+     newProcess->environment->addFloat("skew_x", 0.0);
+     newProcess->environment->addFloat("skew_y", 0.0);
+     
+     newProcess->environment->addByte("red", 255);
+     newProcess->environment->addByte("green", 255);
+     newProcess->environment->addByte("blue", 255);
+     newProcess->environment->addByte("alpha", 255);
 
-    // std::shared_ptr<Environment> newEnv = std::make_shared<Environment>(this->currentDepth, this->environment);
+     newProcess->environment->addBool("show_box", false);
+     newProcess->environment->addBool("show_pivot", false);
+     
+     newProcess->environment->addBool("active", true);
+     newProcess->environment->addBool("visible", true);
+     
+    
 
     for (unsigned int i = 0; i < numArgs; i++)
     {
-        std::shared_ptr<Expr> value = evaluate(expr->arguments[i]);
+        std::shared_ptr<Expr> value = evaluate(expr->parameters[i]);
         if (!value)
         {
             Error("Invalid argument passed to process '" + name + "' at line: " + std::to_string(line));
@@ -720,14 +822,12 @@ std::shared_ptr<Expr> Interpreter::visitProcessCallExpr(ProcessCallExpr *expr)
             if (!newProcess->define(argName, literal->value))
             {
                 newProcess->environment->assign(argName, literal->value);
-                Warning("Process variable '" + argName + "' already defined at line: " + std::to_string(line));
-               // return std::make_shared<EmptyExpr>();
             }
         }
         else
         {
             Error("Invalid argument passed to process '" + name + "" + value->toString());
-            return std::make_shared<EmptyExpr>();
+            return Factory::Instance().createIntegerLiteral(-1);
         }
     }
 
@@ -735,6 +835,50 @@ std::shared_ptr<Expr> Interpreter::visitProcessCallExpr(ProcessCallExpr *expr)
     processes.push_back(std::move(newProcess));
     return Factory::Instance().createIntegerLiteral(id);
 }
+
+int Interpreter::CallerType(const std::string &name)
+{
+    if (processList.find(name) != processList.end())
+    {
+        return 0;
+    }
+    if (functionList.find(name) != functionList.end())
+    {
+        return 1;
+    }
+    if (nativeFunctions.find(name) != nativeFunctions.end())
+    {
+        return 2;
+    }
+    return 3;
+}
+
+
+std::shared_ptr<Expr> Interpreter::visitCallerFunctionExpr(CallerExpr *expr)
+{
+
+   // Warning("Calling function '" + expr->name + "' at line: " + std::to_string(expr->line)+ " caller:" + std::to_string(expr->caller));
+
+    if (expr->caller==0)//process
+    {
+        return callProcess(expr);
+
+    }  
+    
+    if (expr->caller==1)//function
+    {
+        return callFunction(expr);
+    }
+
+    if (expr->caller==2)//native
+    {
+        return callNativeFunction(expr);
+    }
+
+    return std::make_shared<EmptyExpr>();
+}
+
+
 
 void Interpreter::visitFunctionStmt(FunctionStmt *stmt)
 {
@@ -753,8 +897,83 @@ void Interpreter::visitProcessStmt(ProcessStmt *stmt)
         Error("Procedure '" + stmt->name + "' already defined");
         return;
     }
-    processList[stmt->name] = stmt;
+    
+    size_t index = processExecuter.size() ;
+    stmt->index = index;
+    processList[stmt->name]      = stmt;
+    processListNames[stmt->name] = index;
+
+
+    std::shared_ptr<ProcessExecution> process = std::make_shared<ProcessExecution>();
+    process->name = stmt->name;
+    process->index = index;
+    bool isEnds = false;
+
+    BlockStmt *block = dynamic_cast<BlockStmt *>(stmt->body.get());
+    for (auto &stmt : block->declarations)
+    {
+            if (stmt->getType() == StmtType::LOOP)
+            {
+                    LoopStmt *loop  = dynamic_cast<LoopStmt *>(stmt.get());
+                    BlockStmt *child = dynamic_cast<BlockStmt *>(loop->body.get());
+                    process->loopStatements.push_back(child);
+
+                    isEnds = true;
+                    continue;
+            }
+            if (isEnds)
+            {
+                process->finalStatements.push_back(stmt);
+            } else 
+            {
+                process->initialStatements.push_back(stmt);
+            }
+    }
+    processExecuter.push_back(std::move(process)); 
 }
+
+
+bool Interpreter::processInitExecute(size_t index)
+{
+    if (index >= processExecuter.size())
+    {
+        return false;
+    }
+    std::shared_ptr<ProcessExecution> action = processExecuter[index];
+    for (auto &stmt : action->initialStatements)
+    {
+        execute(stmt);
+    }
+    return true;
+}
+bool Interpreter::processEndExecute(size_t index)
+{
+    if (index >= processExecuter.size())
+    {
+        return false;
+    }
+    std::shared_ptr<ProcessExecution> action = processExecuter[index];
+    for (auto &stmt : action->finalStatements)
+    {
+        execute(stmt);
+    }
+    return true;
+    
+}
+bool Interpreter::processLoopExecute(size_t index)
+{
+    if (index >= processExecuter.size())
+    {
+        return false;
+    }
+    std::shared_ptr<ProcessExecution> action = processExecuter[index];
+    for (auto &stmt : action->loopStatements)
+    {
+        execute(stmt);
+    }
+    return true;
+}
+
 
 void Interpreter::visitReturnStmt(ReturnStmt *stmt)
 {
@@ -1110,9 +1329,19 @@ void Interpreter::registerFunction(const std::string &name, NativeFunction funct
         Error("Function '" + name + "' already defined");
         return;
     }
-
+    lexer.addNative(name);
     nativeFunctions[name] = function;
 }
+
+void Interpreter::registerGlobalScope(GlobalScope function)
+{
+   
+
+    function(this->context.get());
+
+   //  this->mainEnvironment->print();
+}
+
 //*****************************************************************************************
 
 Environment::Environment(int depth,  std::shared_ptr<Environment> parent) : m_depth(depth), m_parent(parent)
@@ -1222,8 +1451,8 @@ void Environment::print()
 {
     if (m_parent != nullptr)
     {
-        Log(0, "Parent: depth %d", m_parent->m_depth);
-        m_parent->print();
+       // Log(0, "Parent: depth %d", m_parent->m_depth);
+       // m_parent->print();
     }
 
      for (auto it = m_values.begin(); it != m_values.end(); ++it)
@@ -1459,6 +1688,36 @@ LiteralPtr ExecutionContext::asBool(bool value)
     return literal;
     
 }
+bool ExecutionContext::define_int(const std::string &name, long value)
+{   
+    return interpreter->globalEnvironment()->addInteger(name, value);
+}
+
+
+bool ExecutionContext::define_float(const std::string &name, double value)
+{
+    return interpreter->globalEnvironment()->addFloat(name, value);
+}
+
+
+bool ExecutionContext::define_string(const std::string &name, const std::string &value)
+{
+    return interpreter->globalEnvironment()->addString(name, value);
+}
+
+
+bool ExecutionContext::define_byte(const std::string &name, unsigned char value)
+{
+    return interpreter->globalEnvironment()->addByte(name, value);
+}
+
+
+bool ExecutionContext::define_bool(const std::string &name, bool value)
+{
+    return interpreter->globalEnvironment()->addBool(name, value);
+}
+
+
 LiteralPtr ExecutionContext::asString(const std::string &value)
 {
 
@@ -1492,6 +1751,8 @@ Literal *ExecutionContext::Get(size_t index)
 ExecutionContext::ExecutionContext(Interpreter *interpreter)
 {
     this->interpreter = interpreter;
+    currentProcess = nullptr;
+    internalProcess = nullptr;
 
     values.reserve(25);
 }
@@ -1547,6 +1808,20 @@ bool ExecutionContext::getBool(size_t index)
     return literal->getBool();
 }
 
+Process *ExecutionContext::getCurrentProcess()
+{
+    if (currentProcess == nullptr)
+    {
+        interpreter->Error("Function not in a process");
+        return nullptr;
+    }
+    return currentProcess;
+}
+
+Process *ExecutionContext::getInternalProcess()
+{
+    return internalProcess;
+}
 
 std::string ExecutionContext::getString(size_t index) 
 {

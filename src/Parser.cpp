@@ -4,9 +4,10 @@
 #include "Interpreter.hpp"
 #include "Utils.hpp"
 
+Parser::Parser(){}
 
     
-Parser::Parser(const std::vector<Token> &tokens)
+void Parser::Load(const std::vector<Token> &tokens)
 {
 this->tokens = tokens;
 current = 0;
@@ -42,6 +43,16 @@ std::shared_ptr<Stmt> Parser::parse()
     }
     
    
+}
+
+void Parser::clear()
+{
+
+    tokens.clear();
+    current = 0;
+    panicMode = false;
+    countBegins = 0;
+    countEnds = 0;
 }
 
 bool Parser::match(std::vector<TokenType> types)
@@ -94,7 +105,17 @@ bool Parser::isAtEnd()
 
 void Parser::synchronize()
 {
+
     advance();
+    while(!isAtEnd())
+    {
+        if (tokens[current].type == TokenType::SEMICOLON)
+        {
+            advance();
+            return;
+        }
+        advance();
+    }
 }
 
 Token Parser::advance()
@@ -127,6 +148,7 @@ void Parser::Error(const Token &token,const std::string &message)
     int line = token.line;
     std::string text =message+ " at line: " +std::to_string(line);
     Log(2, text.c_str());
+    synchronize();
 
     throw FatalException(text);
 }
@@ -331,12 +353,15 @@ std::shared_ptr<Expr> Parser::call()
     {
         if (match(TokenType::IDFUNCTION))
         {
-            return functionCall(expr);
+            return functionCall();
         } else 
         if (match(TokenType::IDPROCESS))       
         {
-            return processCall(expr);
-        }  
+            return processCall();
+        }  else    if (match(TokenType::IDNATIVE))
+        {
+            return   nativeFunctionCall();
+        }
         else
         {
             break;
@@ -410,15 +435,15 @@ std::shared_ptr<Expr> Parser::primary()
         {
             Token op = previous();
             return std::make_shared<UnaryExpr>(expr, op,false);
-        } else 
-        if (match(TokenType::DEC))
+        } else  if (match(TokenType::DEC))
         {
             Token op = previous();
             return std::make_shared<UnaryExpr>(expr, op,false);
-        } if (match(TokenType::LEFT_PAREN) )
-        {
-            return defNativeCall(expr);
-        }
+         } 
+        //else if (match(TokenType::LEFT_PAREN) )
+        //  {
+        //      return nativeFunctionCall(expr);
+        //  }
 
         return expr;
     }
@@ -540,39 +565,47 @@ std::shared_ptr<IfStmt> Parser::ifStmt()
 std::shared_ptr<ForStmt> Parser::forStmt()
 {
     
+     
+
     consume(TokenType::LEFT_PAREN, "Expect '(' after 'for'.");
 
     std::shared_ptr<Stmt> initializer = nullptr;
     if (match(TokenType::SEMICOLON))
     {
-        Error(peek(),"Missing 'for' initializer."); 
-    }else 
-    if (match({TokenType::IDINT,TokenType::IDFLOAT,TokenType::IDBYTE,TokenType::IDENTIFIER}))
-    {
-        initializer = declaration();
+        Error(peek(), "Missing 'for' initializer.");
     }
-    else
+    else  if (match(TokenType::IDINT))
     {
-        initializer = expressionStatement();
+        initializer = varDeclaration(LiteralType::INT);
+    }
+    else if (match(TokenType::IDFLOAT))
+    {
+        initializer = varDeclaration(LiteralType::FLOAT);
+    }
+    else if (match(TokenType::IDBYTE))
+    {
+        initializer = varDeclaration(LiteralType::BYTE);
+    } else
+    {
+         initializer = expressionStatement();
     }
     if (match(TokenType::SEMICOLON))
     {
-        Error(peek(),"Missing 'for' condition."); 
+        Error(peek(), "Missing 'for' condition.");
     }
     std::shared_ptr<Expr> condition = expression();
     consume(TokenType::SEMICOLON, "Expect ';' after condition.");
-    
+
     if (match(TokenType::SEMICOLON))
     {
-        Error(peek(),"Missing 'for' step."); 
+        Error(peek(), "Missing 'for' step.");
     }
     std::shared_ptr<Expr> step = expression();
-    
+
     consume(TokenType::RIGHT_PAREN, "Expect ')' after for step.");
 
-
     std::shared_ptr<Stmt> body = statement();
-    
+
     return std::make_shared<ForStmt>(std::move(initializer), std::move(condition), std::move(step), std::move(body));
 }
 
@@ -856,7 +889,31 @@ std::shared_ptr<ProcedureStmt> Parser::procedureStmt()
     return std::make_shared<ProcedureStmt>(nameStr, std::move(parameter), std::move(body));
 }
 
-std::shared_ptr<ProcessCallExpr> Parser::processCall(const std::shared_ptr<Expr> &expr)
+
+std::shared_ptr<ProcedureCallStmt> Parser::procedureCall()
+{
+
+    std::vector<std::shared_ptr<Expr>> arguments;
+    Token name = previous();
+    consume(TokenType::LEFT_PAREN, "Expect '(' after procedure name.");
+     
+    if (match(TokenType::RIGHT_PAREN))
+    {
+     
+    }else 
+    do
+    {   
+            std::shared_ptr<Expr> value = expression();
+            arguments.push_back(value);  
+            if (match(TokenType::RIGHT_PAREN)) break;
+            consume(TokenType::COMMA, "Expect ',' after arguments.");
+            
+    }while (!check(TokenType::RIGHT_PAREN) || !isAtEnd());
+    consume(TokenType::SEMICOLON, "Expect ';' after procedure arguments.");
+    return std::make_shared<ProcedureCallStmt>(name, std::move(arguments));
+}
+
+std::shared_ptr<CallerExpr> Parser::processCall()
 {
 
    
@@ -883,17 +940,21 @@ std::shared_ptr<ProcessCallExpr> Parser::processCall(const std::shared_ptr<Expr>
     }while (!check(TokenType::RIGHT_PAREN) || !isAtEnd());
 
     unsigned int arity = arguments.size();
-    return std::make_shared<ProcessCallExpr>(name,line, std::move(arguments), arity);
+    return std::make_shared<CallerExpr>(name,line, std::move(arguments), arity,0);
 }
 
 
-std::shared_ptr<FunctionCallExpr> Parser::functionCall(const std::shared_ptr<Expr> &expr)
+std::shared_ptr<CallerExpr> Parser::nativeFunctionCall()
 {
 
     std::vector<std::shared_ptr<Expr>> arguments;
-    Token name = previous();
+    Token token = previous();
+        std::string name = token.lexeme;
+    int line = token.line;
+   
+   
+    consume(TokenType::LEFT_PAREN, "Expect '(' after funciton name.");
     
-    consume(TokenType::LEFT_PAREN, "Expect '(' after function name.");
      
     if (match(TokenType::RIGHT_PAREN))
     {
@@ -909,8 +970,42 @@ std::shared_ptr<FunctionCallExpr> Parser::functionCall(const std::shared_ptr<Exp
             
     }while (!check(TokenType::RIGHT_PAREN) || !isAtEnd());
 
+    unsigned int arity = arguments.size();
+    return std::make_shared<CallerExpr>(name,line, std::move(arguments), arity,2);
+}
 
-    return std::make_shared<FunctionCallExpr>(name, std::move(arguments), std::move(expr));  
+std::shared_ptr<CallerExpr> Parser::functionCall()
+{
+
+    std::vector<std::shared_ptr<Expr>> arguments;
+
+    Token token = previous();
+   
+    std::string name = token.lexeme;
+    int line = token.line;
+    consume(TokenType::LEFT_PAREN, "Expect '(' after function name.");
+   
+
+  //  Log(1,"function call %s : %s : %s",peek().toString().c_str(),previous().toString().c_str(),lookAhead().toString().c_str());
+        
+
+    if (match(TokenType::RIGHT_PAREN))
+    {
+     
+    }else 
+    do
+    {   
+            std::shared_ptr<Expr> value = expression();
+            arguments.push_back(value);
+            if (match(TokenType::RIGHT_PAREN)) break;
+            consume(TokenType::COMMA, "Expect ',' after arguments.");
+            
+    }while (!check(TokenType::RIGHT_PAREN) || !isAtEnd());
+
+    unsigned int arity = arguments.size();
+    
+    return std::make_shared<CallerExpr>(name,line, std::move(arguments), arity,1);
+  
 }
 
 std::shared_ptr<ProcessStmt> Parser::processStmt()
@@ -975,55 +1070,9 @@ std::shared_ptr<ProcessStmt> Parser::processStmt()
     return std::make_shared<ProcessStmt>(nameStr, std::move(parameter), std::move(body));
 }
 
-std::shared_ptr<ProcedureCallStmt> Parser::procedureCall()
-{
 
-    std::vector<std::shared_ptr<Expr>> arguments;
-    Token name = previous();
-    consume(TokenType::LEFT_PAREN, "Expect '(' after procedure name.");
-     
-    if (match(TokenType::RIGHT_PAREN))
-    {
-     
-    }else 
-    do
-    {   
-            std::shared_ptr<Expr> value = expression();
-            arguments.push_back(value);  
-            if (match(TokenType::RIGHT_PAREN)) break;
-            consume(TokenType::COMMA, "Expect ',' after arguments.");
-            
-    }while (!check(TokenType::RIGHT_PAREN) || !isAtEnd());
-    consume(TokenType::SEMICOLON, "Expect ';' after procedure arguments.");
-    return std::make_shared<ProcedureCallStmt>(name, std::move(arguments));
-}
 
-std::shared_ptr<NativeFunctionExpr> Parser::defNativeCall(const std::shared_ptr<VariableExpr> &expr)
-{
 
-    std::vector<std::shared_ptr<Expr>> arguments;
-    std::string name = expr->name.lexeme;
-    int line = expr->name.line;
-   
-     
-    if (match(TokenType::RIGHT_PAREN))
-    {
-     
-    }else 
-    do
-    {   
-            std::shared_ptr<Expr> value = expression();
-            arguments.push_back(value);
-            if (match(TokenType::RIGHT_PAREN)) break;
-            consume(TokenType::COMMA, "Expect ',' after arguments.");
-            
-    }while (!check(TokenType::RIGHT_PAREN) || !isAtEnd());
-
-    unsigned int arity = arguments.size();
-    
-    return std::make_shared<NativeFunctionExpr>(name,line, std::move(arguments), arity);
-  
-}
 
 std::shared_ptr<ExpressionStmt> Parser::expressionStatement()
 {

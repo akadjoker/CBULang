@@ -232,7 +232,7 @@ void Literal::setString(const std::string &v)
 
 }
 
-void Literal::setFloat(const double &v)
+void Literal::setFloat( double v)
 {
     if (type == FLOAT)
         value = v;
@@ -256,7 +256,7 @@ void Literal::setFloat(const double &v)
 
 }
 
-void Literal::setBool(const bool &v)
+void Literal::setBool( bool v)
 {
     if (type == BOOLEAN)
         value = v;
@@ -279,7 +279,7 @@ void Literal::setBool(const bool &v)
 
 }
 
-void Literal::setByte(const unsigned char &v)
+void Literal::setByte( unsigned char v)
 {
     if (type == BYTE)
         value = v;
@@ -302,7 +302,7 @@ void Literal::setByte(const unsigned char &v)
 
 }
 
-void Literal::setInt(const long &v)
+void Literal::setInt( long v)
 {
     if (type == INT)
         value = v;

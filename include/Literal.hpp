@@ -40,10 +40,10 @@ public:
     long            getInt() const;
 
     void setString(const std::string &v);
-    void setFloat(const double &v);
-    void setBool(const bool &v);
-    void setByte(const unsigned char &v);
-    void setInt(const long &v);
+    void setFloat( double v);
+    void setBool( bool v);
+    void setByte( unsigned char v);
+    void setInt( long v);
 
     bool isTruthy() const;
     bool isEqual(const Literal &other) const;
